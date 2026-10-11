@@ -79,3 +79,6 @@
 .drive-client-row{display:flex;gap:8px;flex-wrap:wrap}
 .drive-client-row input{flex:1;min-width:220px;padding:9px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit}
 .data-actions button:disabled,.backup-list button:disabled{opacity:.55;cursor:default}
+.section-json-actions{margin-bottom:20px}
+.section-json-actions .data-meta{margin:0;color:var(--muted);font-size:12px}
+.profile-modal .section-json-actions .file-button{display:grid;place-items:center;margin-bottom:0}

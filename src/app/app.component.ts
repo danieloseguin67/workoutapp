@@ -561,6 +561,64 @@ export class AppComponent implements OnInit, OnDestroy {
   setView(view: View): void { this.view = view; this.previewVideo = null; }
   openProfile(): void { this.modal = 'profile'; }
   saveProfile(): void { this.save(KEYS.profile, this.profile); this.modal = null; this.toast(this.t('toast.profile')); }
+  exportProfile(): void {
+    this.download({ app: 'mouvement', version: 1, profile: this.profile }, 'mouvement-profile.json');
+    this.toast(this.t('toast.exported'));
+  }
+  exportHistory(): void {
+    this.download({ app: 'mouvement', version: 1, logs: this.logs }, 'mouvement-history.json');
+    this.toast(this.t('toast.exported'));
+  }
+  importProfile(event: Event): void { this.importSection(event, 'profile'); }
+  importHistory(event: Event): void { this.importSection(event, 'history'); }
+  private importSection(event: Event, section: 'profile' | 'history'): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    const invalidKey = section === 'profile' ? 'profileModal.badImport' : 'history.badImport';
+    reader.onerror = () => { this.toast(this.t(invalidKey)); input.value = ''; };
+    reader.onload = () => {
+      try {
+        const parsed: unknown = JSON.parse(String(reader.result).replace(/^\uFEFF/, ''));
+        const data = this.isRecord(parsed) && parsed['app'] === 'mouvement'
+          ? parsed[section === 'profile' ? 'profile' : 'logs'] : parsed;
+        if (section === 'profile') {
+          if (!this.isProfile(data)) throw new Error('invalid');
+          if (!window.confirm(this.t('profileModal.confirmImport'))) return;
+          this.profile = { name: data.name, age: data.age, objective: data.objective, weightLoss: data.weightLoss };
+          this.save(KEYS.profile, this.profile);
+          this.toast(this.t('profileModal.imported'));
+        } else {
+          if (!this.isHistory(data)) throw new Error('invalid');
+          if (!window.confirm(this.t('history.confirmImport'))) return;
+          this.logs = data;
+          this.save(KEYS.logs, this.logs);
+          this.toast(this.t('history.imported'));
+        }
+      } catch { this.toast(this.t(invalidKey)); }
+      finally { input.value = ''; }
+    };
+    reader.readAsText(file);
+  }
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === 'object' && value !== null && !Array.isArray(value);
+  }
+  private isProfile(value: unknown): value is Profile {
+    return this.isRecord(value) && typeof value['name'] === 'string'
+      && (value['age'] === null || (typeof value['age'] === 'number' && Number.isFinite(value['age']) && value['age'] >= 1 && value['age'] <= 120))
+      && (value['objective'] === 'Remise en forme' || value['objective'] === 'Force')
+      && (value['weightLoss'] === null || (typeof value['weightLoss'] === 'number' && Number.isFinite(value['weightLoss']) && value['weightLoss'] >= 0));
+  }
+  private isLogInterval(value: unknown): boolean {
+    return this.isRecord(value) && typeof value['startedAt'] === 'string' && typeof value['endedAt'] === 'string'
+      && Number.isFinite(Date.parse(value['startedAt'])) && Number.isFinite(Date.parse(value['endedAt']))
+      && Date.parse(value['endedAt']) >= Date.parse(value['startedAt']);
+  }
+  private isHistory(value: unknown): value is SessionLog[] {
+    return Array.isArray(value) && value.every(log => this.isRecord(log) && typeof log['workoutName'] === 'string'
+      && this.isLogInterval(log) && Array.isArray(log['exercises'])
+      && log['exercises'].every((exercise: unknown) => this.isRecord(exercise) && typeof exercise['name'] === 'string' && this.isLogInterval(exercise)));
+  }
 
   // ---------- session runner ----------
   get activeExercise(): Exercise | null { return this.runExercises[this.exerciseIndex]?.exercise ?? null; }

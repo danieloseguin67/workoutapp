@@ -165,6 +165,13 @@
       </section>
     } @else {
       <section class="page-heading"><div><div class="eyebrow">{{ t('history.eyebrow') }}</div><h1>{{ t('nav.history') }}</h1><p>{{ t('history.intro') }}</p></div><div class="history-total"><strong>{{ completedSessions }}</strong><span>{{ t('history.sessions') }}</span></div></section>
+      <section class="section-json-actions">
+        <div class="data-actions">
+          <label class="file-button">{{ t('history.import') }}<input type="file" accept="application/json,.json" (change)="importHistory($event)"></label>
+          <button class="export-button" (click)="exportHistory()">{{ t('history.export') }}</button>
+        </div>
+        <p class="data-meta">{{ t('history.fileHint') }}</p>
+      </section>
       @if (logs.length) {<div class="history-list">@for (log of recentLogs; track log.startedAt) {<article class="history-card"><span class="history-check">✓</span><div class="history-main"><h3>{{ log.workoutName }}</h3><p>{{ date(log.startedAt) }} · {{ time(log.startedAt) }} – {{ time(log.endedAt) }}</p></div><div class="history-exercises">{{ t('history.intervals', { count: log.exercises.length }) }}</div><span class="history-duration">{{ clock(sessionSeconds(log)) }}</span></article>}</div><button class="text-link danger-link history-clear" (click)="clearHistory()">{{ t('history.clear') }}</button>} @else {<div class="empty-state history-empty"><span>◷</span><h3>{{ t('history.emptyTitle') }}</h3><p>{{ t('history.emptyText') }}</p><button class="primary-button" (click)="setView('workouts')">{{ t('history.seeWorkouts') }}</button></div>}
     }
     <nav class="mobile-tabs" [attr.aria-label]="t('nav.mobile')">
@@ -177,7 +184,31 @@
   </main>
 </div>
 
-@if (modal === 'profile') {<div class="modal-backdrop" (click)="modal = null"><section class="modal-card profile-modal" (click)="$event.stopPropagation()"><button class="modal-close" (click)="modal = null">×</button><div class="eyebrow">{{ t('profileModal.eyebrow') }}</div><h2>{{ t('profileModal.title') }}</h2><p class="modal-intro">{{ t('profileModal.intro') }}</p><label>{{ t('profileModal.name') }}<input [(ngModel)]="profile.name" [placeholder]="t('profileModal.namePh')" autofocus></label><div class="form-row"><label>{{ t('profileModal.age') }}<input type="number" min="1" max="120" [(ngModel)]="profile.age" [placeholder]="t('profileModal.agePh')"></label><label>{{ t('profileModal.objective') }}<select [(ngModel)]="profile.objective">@for (objective of objectives; track objective) {<option [value]="objective">{{ objectiveLabel(objective) }}</option>}</select></label></div><label>{{ t('profileModal.weight') }} <span class="optional-label">{{ t('profileModal.optional') }}</span><div class="input-suffix"><input type="number" min="0" step="0.5" [(ngModel)]="profile.weightLoss" placeholder="0"><span>kg</span></div></label><label>{{ t('lang.label') }}<select [ngModel]="lang" (ngModelChange)="setLang($event)">@for (option of langs; track option.code) {<option [value]="option.code">{{ option.label }}</option>}</select></label><button class="primary-button full-button" (click)="saveProfile()">{{ t('profileModal.save') }} <span>→</span></button></section></div>}
+@if (modal === 'profile') {
+  <div class="modal-backdrop" (click)="modal = null">
+    <section class="modal-card profile-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="modal = null">×</button>
+      <div class="eyebrow">{{ t('profileModal.eyebrow') }}</div>
+      <h2>{{ t('profileModal.title') }}</h2>
+      <p class="modal-intro">{{ t('profileModal.intro') }}</p>
+      <section class="section-json-actions">
+        <div class="data-actions">
+          <label class="file-button">{{ t('profileModal.import') }}<input type="file" accept="application/json,.json" (change)="importProfile($event)"></label>
+          <button class="export-button" (click)="exportProfile()">{{ t('profileModal.export') }}</button>
+        </div>
+        <p class="data-meta">{{ t('profileModal.fileHint') }}</p>
+      </section>
+      <label>{{ t('profileModal.name') }}<input [(ngModel)]="profile.name" [placeholder]="t('profileModal.namePh')" autofocus></label>
+      <div class="form-row">
+        <label>{{ t('profileModal.age') }}<input type="number" min="1" max="120" [(ngModel)]="profile.age" [placeholder]="t('profileModal.agePh')"></label>
+        <label>{{ t('profileModal.objective') }}<select [(ngModel)]="profile.objective">@for (objective of objectives; track objective) {<option [value]="objective">{{ objectiveLabel(objective) }}</option>}</select></label>
+      </div>
+      <label>{{ t('profileModal.weight') }} <span class="optional-label">{{ t('profileModal.optional') }}</span><div class="input-suffix"><input type="number" min="0" step="0.5" [(ngModel)]="profile.weightLoss" placeholder="0"><span>kg</span></div></label>
+      <label>{{ t('lang.label') }}<select [ngModel]="lang" (ngModelChange)="setLang($event)">@for (option of langs; track option.code) {<option [value]="option.code">{{ option.label }}</option>}</select></label>
+      <button class="primary-button full-button" (click)="saveProfile()">{{ t('profileModal.save') }} <span>→</span></button>
+    </section>
+  </div>
+}
 
 @if (modal === 'workout') {
   <div class="modal-backdrop" (click)="modal = null">

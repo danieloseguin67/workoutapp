@@ -75,6 +75,14 @@ Everything is saved in the browser's **localStorage** under these keys:
 
 ### Export to your computer or Google Drive
 
+**Profile** and **History** also have their own **Import JSON / Export JSON** buttons (French: **Importer JSON / Exporter JSON**), including on phones:
+
+- Open **My profile** to export `mouvement-profile.json` or import a profile.
+- Open **History** to export `mouvement-history.json` or import history, even when the history is empty.
+- Each import asks for confirmation and replaces only that section, without changing workout programs or the other section. With auto-save off, use **Save now** to persist the imported data.
+- These imports accept their dedicated export, a raw profile object/history array, or the matching section of an **Export everything** backup. Invalid files leave existing data unchanged.
+- Download the JSON file from Google Drive to your phone, then select it with the corresponding import button.
+
 The full backup (`mouvement-backup-YYYY-MM-DD-HH-MM.json`, containing profile, history, workouts, and settings) can be saved several ways:
 
 - **↓ Export everything:** downloads the file to your Downloads folder.
