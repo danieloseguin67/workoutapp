@@ -220,11 +220,13 @@ export class AppComponent implements OnInit, OnDestroy {
     const file = input.files?.[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = () => { this.importBackupText(String(reader.result)); input.value = ''; };
+    reader.onerror = () => { this.toast(this.t('toast.badBackup')); input.value = ''; };
     reader.readAsText(file);
   }
   private importBackupText(text: string): boolean {
     try {
-      const parsed = JSON.parse(text) as Partial<AppData & { app: string; settings: Partial<Settings> }>;
+      const parsed = JSON.parse(text.replace(/^\uFEFF/, '')) as Partial<AppData & { app: string; settings: Partial<Settings> }>;
+      if (this.isWorkoutList(parsed)) { this.importWorkoutList(parsed); return true; }
       if (!parsed || parsed.app !== 'mouvement' || !this.isWorkoutList(parsed.workouts) || !Array.isArray(parsed.logs ?? []) || typeof (parsed.profile ?? {}) !== 'object') throw new Error('invalid');
       if (!window.confirm(this.t('confirm.importAll'))) return false;
       this.applyData({ workouts: parsed.workouts, logs: (parsed.logs ?? []) as SessionLog[], profile: (parsed.profile ?? this.profile) as Profile });
@@ -389,18 +391,26 @@ export class AppComponent implements OnInit, OnDestroy {
     this.workouts = this.workouts.filter(item => item.id !== workout.id); this.save(KEYS.workouts, this.workouts); this.toast(this.t('toast.deleted'));
   }
   exportWorkouts(): void { this.download(this.workouts, this.lang === 'fr' ? 'mes-seances-mouvement.json' : 'my-mouvement-workouts.json'); }
+  private importWorkoutList(workouts: Workout[]): void {
+    this.workouts = workouts; this.attachMissingVideos(); this.save(KEYS.workouts, this.workouts); this.toast(this.t('toast.imported'));
+  }
   importWorkouts(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const parsed: unknown = JSON.parse(String(reader.result));
+        const text = String(reader.result).replace(/^\uFEFF/, '');
+        const parsed: unknown = JSON.parse(text);
+        if (parsed !== null && typeof parsed === 'object' && 'app' in parsed && parsed.app === 'mouvement') {
+          this.importBackupText(text); return;
+        }
         if (!this.isWorkoutList(parsed)) throw new Error('invalid');
-        this.workouts = parsed; this.attachMissingVideos(); this.save(KEYS.workouts, this.workouts); this.toast(this.t('toast.imported'));
+        this.importWorkoutList(parsed);
       } catch { this.toast(this.t('toast.badImport')); }
-      input.value = '';
+      finally { input.value = ''; }
     };
+    reader.onerror = () => { this.toast(this.t('toast.badImport')); input.value = ''; };
     reader.readAsText(file);
   }
 

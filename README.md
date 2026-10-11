@@ -71,7 +71,7 @@ Everything is saved in the browser's **localStorage** under these keys:
 - **Protect storage:** asks the browser not to clear the data automatically (`navigator.storage.persist`).
 - **Erase all data:** resets workouts, history, and profile. The language setting is kept.
 
-**Exporter / Importer JSON** at the top of Configuration still handles workouts only.
+**Exporter JSON** at the top of Configuration exports workouts only. Both import buttons accept either a workout list or a full Mouvement backup. A workout list replaces only workouts, keeping the current profile and history; a full backup asks for confirmation before restoring workouts, profile, history, and language. This also works with JSON files downloaded from Google Drive on a phone.
 
 ### Export to your computer or Google Drive
 
