@@ -1,0 +1,50 @@
+# Build output
+/dist/
+/tmp/
+/out-tsc/
+/bazel-out/
+
+# Dependencies
+/node_modules/
+
+# Angular cache
+/.angular/cache/
+/.angular/
+.sass-cache/
+
+# Logs
+npm-debug.log*
+yarn-error.log*
+*.log
+
+# Environment
+.env
+.env.*
+
+# Editors / IDE
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+*.sw?
+
+# Test / coverage
+/coverage/
+/libpeerconnection.log
+testem.log
+/typings/
+
+# Python (video generator tooling)
+__pycache__/
+.venv/
+venv/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Generated preview sheets
+public/videos/_sheet.png

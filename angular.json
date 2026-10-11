@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "mouvement": {
+      "projectType": "application",
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": { "builder": "@angular/build:application", "options": { "browser": "src/main.ts", "index": "src/index.html", "tsConfig": "tsconfig.app.json", "assets": [{ "glob": "**/*", "input": "public" }], "styles": ["src/styles.css"] }, "configurations": { "production": { "optimization": true, "outputHashing": "all" }, "development": { "optimization": false, "extractLicenses": false, "sourceMap": true } }, "defaultConfiguration": "production" },
+        "serve": { "builder": "@angular/build:dev-server", "configurations": { "production": { "buildTarget": "mouvement:build:production" }, "development": { "buildTarget": "mouvement:build:development" } }, "defaultConfiguration": "development" }
+      }
+    }
+  }
+}

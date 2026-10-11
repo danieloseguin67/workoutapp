@@ -1,0 +1,426 @@
+[
+  {
+    "id": "seance-a",
+    "name": "Session A — Basic Cardio",
+    "subtitle": "A first step, simply.",
+    "duration": 20,
+    "level": "Débutant",
+    "color": "mint",
+    "optional": false,
+    "exercises": [
+      {
+        "id": "a1",
+        "name": "Brisk walk",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Walk in place, swinging your arms naturally.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "a2",
+        "name": "Butt kicks",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Gently bring your heels toward your glutes.",
+        "video": "talons-fesses.mp4"
+      },
+      {
+        "id": "a3",
+        "name": "Side steps",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Step sideways, keeping your knees soft.",
+        "video": "pas-lateraux.mp4"
+      },
+      {
+        "id": "a4",
+        "name": "Shoulder circles",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Make small, controlled circles with your shoulders.",
+        "video": "cercles-depaules.mp4"
+      },
+      {
+        "id": "a5",
+        "name": "Gentle jumping jacks",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Step one foot out at a time and raise your arms, no jumping. Gentle version, at your own pace.",
+        "video": "jumping-jacks-doux.mp4"
+      },
+      {
+        "id": "a6",
+        "name": "High knees",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Lift your knees to a comfortable height, alternating.",
+        "video": "high-knees.mp4"
+      },
+      {
+        "id": "a7",
+        "name": "Slow mountain climbers",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "In an incline plank against a wall or chair, bring one knee in at a time.",
+        "video": "mountain-climbers-lents.mp4"
+      },
+      {
+        "id": "a8",
+        "name": "Brisk walk",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Walk in place and breathe steadily.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "a8-pause",
+        "name": "Active recovery",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relax your shoulders, breathe and get ready for the next round.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "a9",
+        "name": "Slow walk",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Slow down gradually, taking deep breaths.",
+        "video": "marche-lente.mp4"
+      },
+      {
+        "id": "a10",
+        "name": "Quad stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Hold on if needed. Gently bring your heel toward your glute.",
+        "video": "etirement-quadriceps.mp4"
+      },
+      {
+        "id": "a11",
+        "name": "Hamstring stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Extend one leg in front of you and lean forward without forcing.",
+        "video": "etirement-ischios.mp4"
+      }
+    ]
+  },
+  {
+    "id": "seance-b",
+    "name": "Session B — Cardio + Light Strength",
+    "subtitle": "Movement, gently.",
+    "duration": 20,
+    "level": "Modéré",
+    "color": "peach",
+    "optional": false,
+    "exercises": [
+      {
+        "id": "b1",
+        "name": "Walk",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Walk in place with a relaxed posture.",
+        "video": "marche.mp4"
+      },
+      {
+        "id": "b2",
+        "name": "Step jacks",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Step to the side and back, adding your arms if you like.",
+        "video": "step-jacks.mp4"
+      },
+      {
+        "id": "b3",
+        "name": "Torso rotation",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Gently rotate your upper body to each side.",
+        "video": "rotation-du-tronc.mp4"
+      },
+      {
+        "id": "b4",
+        "name": "Dynamic squats",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Push your hips back, then stand up. Keep your feet on the floor.",
+        "video": "squats-dynamiques.mp4"
+      },
+      {
+        "id": "b5",
+        "name": "Step-ups",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Step up and down a stable step, alternating legs.",
+        "video": "step-up-montee-de-marche.mp4"
+      },
+      {
+        "id": "b6",
+        "name": "Dynamic plank",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Leaning against a wall, bend and straighten your arms, keeping your body aligned.",
+        "video": "planche-dynamique.mp4"
+      },
+      {
+        "id": "b7",
+        "name": "Brisk walk",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Walk in place and catch your breath.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "b7-pause",
+        "name": "Active recovery",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relax your shoulders, breathe and get ready for the next round.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "b8",
+        "name": "Breathing",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Breathe in slowly through your nose, then breathe out gently.",
+        "video": "respiration.mp4"
+      },
+      {
+        "id": "b9",
+        "name": "Calf stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "One foot behind the other, gently press the back heel toward the floor.",
+        "video": "etirement-mollets.mp4"
+      },
+      {
+        "id": "b10",
+        "name": "Back stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Gently round your back and relax your shoulders.",
+        "video": "etirement-dos.mp4"
+      }
+    ]
+  },
+  {
+    "id": "seance-c",
+    "name": "Session C — Gentle Cardio",
+    "subtitle": "Find your rhythm again.",
+    "duration": 20,
+    "level": "Débutant",
+    "color": "lavender",
+    "optional": false,
+    "exercises": [
+      {
+        "id": "c1",
+        "name": "Slow walk",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Start with an easy walk in place.",
+        "video": "marche-lente.mp4"
+      },
+      {
+        "id": "c2",
+        "name": "Hip mobility",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Make slow circles with your hips, in both directions.",
+        "video": "mobilite-des-hanches.mp4"
+      },
+      {
+        "id": "c3",
+        "name": "Side steps",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Step sideways, keeping your knees soft.",
+        "video": "pas-lateraux.mp4"
+      },
+      {
+        "id": "c4",
+        "name": "Jog in place",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Jog gently in place, or replace it with a brisk walk.",
+        "video": "course-sur-place.mp4"
+      },
+      {
+        "id": "c5",
+        "name": "Fast butt kicks",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Alternately bring your heels toward your glutes, at your own pace.",
+        "video": "talons-fesses-rapides.mp4"
+      },
+      {
+        "id": "c6",
+        "name": "Wave steps",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Flow through smooth steps, gently moving your arms from side to side.",
+        "video": "code-ondule.mp4"
+      },
+      {
+        "id": "c7",
+        "name": "Brisk walk",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Walk in place to keep moving gently.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "c7-pause",
+        "name": "Active recovery",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relax your shoulders, breathe and get ready for the next round.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "c8",
+        "name": "Breathing",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Breathe in slowly, then breathe out as you relax your shoulders.",
+        "video": "respiration.mp4"
+      },
+      {
+        "id": "c9",
+        "name": "Quad stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Hold on if needed and bring your heel toward your glute without forcing.",
+        "video": "etirement-quadriceps.mp4"
+      },
+      {
+        "id": "c10",
+        "name": "Arm/shoulder stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Stretch one arm across your chest, then switch sides.",
+        "video": "etirement-bras-epaules.mp4"
+      }
+    ]
+  },
+  {
+    "id": "seance-d",
+    "name": "Session D — Moderate Intensity Cardio",
+    "subtitle": "Try it whenever you feel like it.",
+    "duration": 20,
+    "level": "Modéré",
+    "color": "blue",
+    "optional": true,
+    "exercises": [
+      {
+        "id": "d1",
+        "name": "Walk",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Walk in place to warm up gradually.",
+        "video": "marche.mp4"
+      },
+      {
+        "id": "d2",
+        "name": "Step jacks",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Step to the side and back, adding your arms.",
+        "video": "step-jacks.mp4"
+      },
+      {
+        "id": "d3",
+        "name": "Torso rotation",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Gently rotate your upper body to each side.",
+        "video": "rotation-du-tronc.mp4"
+      },
+      {
+        "id": "d4",
+        "name": "Gentle burpee",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Place your hands on a stable chair, step one foot back then the other, and stand back up.",
+        "video": "burpee-version-douce.mp4"
+      },
+      {
+        "id": "d5",
+        "name": "High knees",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Lift your knees to a comfortable height, alternating.",
+        "video": "high-knees.mp4"
+      },
+      {
+        "id": "d6",
+        "name": "Squat + calf raise",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Do a small squat, then rise onto your toes as you stand up.",
+        "video": "squat-montee-sur-pointe.mp4"
+      },
+      {
+        "id": "d7",
+        "name": "Brisk walk",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Walk in place to keep a steady effort.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "d7-pause",
+        "name": "Active recovery",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relax your shoulders, breathe and get ready for the next round.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "d8",
+        "name": "Breathing",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Breathe in slowly through your nose, then breathe out gently.",
+        "video": "respiration.mp4"
+      },
+      {
+        "id": "d9",
+        "name": "Leg stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Gently stretch the front and back of your legs, without bouncing.",
+        "video": "etirement-jambes.mp4"
+      },
+      {
+        "id": "d10",
+        "name": "Back stretch",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Gently round your back and relax your shoulders.",
+        "video": "etirement-dos.mp4"
+      }
+    ]
+  }
+]

@@ -1,0 +1,275 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" href="#home" (click)="setView('home')"><span class="brand-mark">m.</span><span>mouvement<span class="brand-dot">.</span></span></a>
+    <div class="nav-label">{{ t('nav.menu') }}</div>
+    <nav class="nav-links" [attr.aria-label]="t('nav.main')">
+      <button [class.selected]="view === 'home'" (click)="setView('home')"><span class="nav-icon">⌂</span>{{ t('nav.home') }}</button>
+      <button [class.selected]="view === 'workouts'" (click)="setView('workouts')"><span class="nav-icon">▤</span>{{ t('nav.workouts') }}</button>
+      <button [class.selected]="view === 'history'" (click)="setView('history')"><span class="nav-icon">◷</span>{{ t('nav.history') }}</button>
+      <button [class.selected]="view === 'config'" (click)="setView('config')"><span class="nav-icon">⚙</span>{{ t('nav.config') }}</button>
+    </nav>
+    <div class="lang-switch" role="group" [attr.aria-label]="t('lang.label')">@for (option of langs; track option.code) {<button [class.selected]="lang === option.code" (click)="setLang(option.code)" [attr.aria-pressed]="lang === option.code" [title]="option.label">{{ option.code.toUpperCase() }}</button>}</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-note"><span class="sparkle">✳</span><p>{{ t('sidebar.note1') }}<br>{{ t('sidebar.note2') }}</p><span class="note-small">{{ t('brand.tagline') }}</span></div>
+    <button class="profile-mini" (click)="openProfile()"><span class="avatar">{{ firstName.charAt(0).toUpperCase() }}</span><span class="profile-mini-text"><strong>{{ profile.name || t('profile.yours') }}</strong><small>{{ t('profile.mine') }}</small></span><span class="more">···</span></button>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar"><button class="mobile-brand" (click)="setView('home')"><span class="brand-mark">m.</span> mouvement<span class="brand-dot">.</span></button><div class="date-label">{{ todayLabel }}</div><div class="topbar-right"><div class="lang-switch lang-switch-mobile" role="group" [attr.aria-label]="t('lang.label')">@for (option of langs; track option.code) {<button [class.selected]="lang === option.code" (click)="setLang(option.code)" [attr.aria-pressed]="lang === option.code">{{ option.code.toUpperCase() }}</button>}</div><button class="top-avatar" (click)="openProfile()" [attr.aria-label]="t('profile.of', { name: profile.name })">{{ firstName.charAt(0).toUpperCase() }}</button></div></header>
+
+    @if (dirty) {<div class="unsaved-bar"><span>● {{ t('data.unsaved') }}</span><button class="primary-button" (click)="saveNow()">{{ t('data.saveNow') }}</button></div>}
+
+    @if (activeWorkout; as workout) {
+      <section class="session-view">
+        <button class="back-link" (click)="cancelWorkout()">{{ t('session.quit') }}</button>
+        <div class="session-heading"><div><div class="eyebrow">{{ t('session.eyebrow') }}</div><h1>{{ workout.name }}</h1><p>{{ t('session.calm') }}</p></div><span class="session-badge">{{ exerciseIndex + 1 }} / {{ runExercises.length }}</span></div>
+        <div class="session-layout">
+          <article class="exercise-focus">
+            @if (activeExercise?.video) {<div class="exercise-art large-art video-art" [attr.data-color]="workout.color"><video [src]="videoUrl(activeExercise?.video)" autoplay loop muted playsinline [attr.aria-label]="t('session.demo', { name: activeExercise?.name ?? '' })"></video><span class="art-label">{{ activeExercise?.name }}</span></div>} @else {<div class="exercise-art large-art" [attr.data-color]="workout.color"><div class="art-sun"></div><div class="art-floor"></div><svg viewBox="0 0 250 230" role="img" [attr.aria-label]="t('session.illustration', { name: activeExercise?.name ?? '' })"><circle cx="125" cy="42" r="20" class="person-head"/><path d="M125 66 L125 132 M125 82 L83 106 M125 82 L168 105 M125 132 L93 190 M125 132 L159 190" class="person-body"/><path d="M76 108 L63 101 M169 106 L184 98 M90 193 L76 193 M160 193 L176 193" class="person-limb"/></svg><span class="art-label">{{ activeExercise?.name }}</span></div>}
+            <div class="exercise-info"><div class="phase-label">{{ phaseLabel(activeExercise?.phase ?? '') }} <span>·</span> {{ exerciseIndex + 1 }} {{ t('session.of') }} {{ runExercises.length }}</div><h2>{{ activeExercise?.name }}</h2><p>{{ activeExercise?.tip }}</p></div>
+            <div class="exercise-progress"><div class="progress-track"><span [style.width.%]="progress"></span></div><span>{{ progress }}%</span></div>
+            <div class="session-controls"><button class="skip-control" [disabled]="exerciseIndex === 0" (click)="previousExercise()">{{ t('session.previous') }}</button><button class="play-control" (click)="toggleRun()"><span>{{ running ? 'Ⅱ' : '▶' }}</span>{{ running ? t('session.pause') : t('session.start') }}</button><button class="skip-control" (click)="skipExercise()">{{ exerciseIndex === runExercises.length - 1 ? t('session.finish') : t('session.next') }} →</button></div>
+          </article>
+          <aside class="timer-card"><div class="timer-topline">{{ currentRound ? t('session.round', { round: currentRound, total: activeWorkoutRounds }) : t('session.exerciseTime') }}</div><div class="timer-ring"><div class="timer-inner"><span>{{ clock(remaining) }}</span><small>{{ running ? t('session.running') : t('session.ownPace') }}</small></div></div><div class="next-exercise"><span class="next-icon">{{ nextExercise ? exerciseIcon(nextExercise.name) : '✓' }}</span><div><small>{{ t('session.upNext') }}</small><strong>{{ nextExercise?.name || t('session.end') }}</strong></div><span class="next-duration">{{ nextExercise ? clock(nextExercise.seconds) : '' }}</span></div><div class="session-tip"><span>✳</span> {{ t('session.tip') }}</div></aside>
+        </div>
+      </section>
+    } @else if (view === 'home') {
+      <section class="welcome-row"><div><div class="eyebrow">{{ todayLabel }}</div><h1>{{ t('home.hello', { name: firstName }) }} <span class="wave">✳</span></h1><p>{{ t('home.ready') }}</p></div><button class="edit-profile-link" (click)="openProfile()">{{ t('home.editProfile') }} <span>↗</span></button></section>
+      <section class="hero-card"><div class="hero-copy"><div class="hero-eyebrow"><span class="live-dot"></span> {{ t('home.heroEyebrow') }}</div><h2>{{ t('home.hero1') }}<br>{{ t('home.hero2') }}</h2><p>{{ t('home.heroText') }}</p><button class="hero-button" (click)="setView('workouts')">{{ t('home.choose') }} <span>→</span></button></div><div class="hero-art" aria-hidden="true"><div class="hero-circle circle-back"></div><div class="hero-circle circle-front"></div><div class="hero-figure"><span class="figure-head"></span><span class="figure-torso"></span><span class="figure-arm"></span><span class="figure-leg one"></span><span class="figure-leg two"></span></div><span class="hero-spark s1">✳</span><span class="hero-spark s2">✧</span><div class="hero-caption">{{ t('home.heroCaption1') }}<br><small>{{ t('home.heroCaption2') }}</small></div></div><div class="hero-index">01 <span>/ 04</span></div></section>
+      <section class="stats-row"><article class="stat-card"><span class="stat-icon peach-icon">◷</span><div><strong>{{ completedSessions }}</strong><span>{{ t('home.completed') }}</span></div><span class="stat-note">{{ t('home.sinceStart') }}</span></article><article class="stat-card"><span class="stat-icon mint-icon">↗</span><div><strong>{{ totalMinutes }}<small> min</small></strong><span>{{ t('home.moving') }}</span></div><span class="stat-note">{{ t('home.everyMinute') }}</span></article><article class="stat-card objective-card"><span class="stat-icon lilac-icon">✳</span><div><strong>{{ objectiveLabel(profile.objective) }}</strong><span>{{ t('home.objective') }}</span></div><button (click)="openProfile()">{{ t('home.edit') }}</button></article></section>
+      <section class="section-heading"><div><div class="eyebrow">{{ t('home.yourChoice') }}</div><h2>{{ t('home.yourWorkouts') }}</h2></div><button class="text-link" (click)="setView('workouts')">{{ t('home.allWorkouts') }} <span>→</span></button></section>
+      <section class="workout-grid home-grid">@for (workout of workouts.slice(0, 3); track workout.id) {<article class="workout-card" [attr.data-color]="workout.color"><div class="workout-card-top"><span class="workout-symbol">{{ workoutSymbol(workout.color) }}</span><span class="level-pill">{{ levelLabel(workout.level) }}</span></div><div class="workout-illustration"><div class="illustration-orb"></div><div class="mini-person"><i></i><b></b><em></em></div><span class="illustration-spark">✧</span></div><div class="workout-card-bottom"><div class="workout-meta"><span>{{ workout.duration }} {{ t('card.min') }}</span>@if (workout.optional) {<span class="optional-tag">{{ t('card.optional') }}</span>}</div><h3>{{ workout.name }}</h3><p>{{ workout.subtitle }}</p><div class="workout-actions"><button class="start-button" (click)="startWorkout(workout)">{{ t('card.start') }} <span>→</span></button><button class="icon-button" (click)="openEditWorkout(workout)" [attr.aria-label]="t('card.editWorkout')">↗</button></div></div></article>}</section>
+      <section class="bottom-note"><span>✳</span><p>{{ t('home.remember') }}<br><strong>{{ t('home.rememberStrong') }}</strong></p><span class="note-sun">☼</span></section>
+    } @else if (view === 'workouts') {
+      <section class="page-heading"><div><div class="eyebrow">{{ t('workouts.eyebrow') }}</div><h1>{{ t('nav.workouts') }}</h1><p>{{ t('workouts.intro') }}</p></div><div class="library-actions"><button class="export-button" (click)="setView('config')">{{ t('workouts.manage') }}</button><button class="ai-button" (click)="openAiAssistant()">{{ t('workouts.ai') }}</button><button class="primary-button" (click)="openNewWorkout()"><span>＋</span> {{ t('workouts.create') }}</button></div></section>
+      <section class="workout-grid library-grid">@for (workout of workouts; track workout.id) {<article class="workout-card" [attr.data-color]="workout.color"><div class="workout-card-top"><span class="workout-symbol">{{ workoutSymbol(workout.color) }}</span><span class="level-pill">{{ levelLabel(workout.level) }}</span></div><div class="workout-illustration"><div class="illustration-orb"></div><div class="mini-person"><i></i><b></b><em></em></div><span class="illustration-spark">✧</span></div><div class="workout-card-bottom"><div class="workout-meta"><span>{{ workout.duration }} {{ t('card.min') }}</span><span>{{ workout.exercises.length }} {{ t('card.exercises') }}</span></div><h3>{{ workout.name }}</h3><p>{{ workout.subtitle }}</p><div class="workout-actions"><button class="start-button" (click)="startWorkout(workout)">{{ t('card.start') }} <span>→</span></button><button class="icon-button" (click)="openEditWorkout(workout)" [attr.aria-label]="t('card.edit')">✎</button><button class="delete-button" (click)="deleteWorkout(workout)" [attr.aria-label]="t('card.delete')">×</button></div></div></article>} @empty {<div class="empty-state"><span>✳</span><h3>{{ t('workouts.emptyTitle') }}</h3><p>{{ t('workouts.emptyText') }}</p><button class="primary-button" (click)="openNewWorkout()">{{ t('workouts.create') }}</button></div>}</section>
+      <section class="json-note"><span>{{ '{ }' }}</span><p>{{ settings.autoSave ? t('workouts.storedNote') : t('workouts.memoryNote') }}</p></section>
+    } @else if (view === 'config') {
+      <section class="page-heading"><div><div class="eyebrow">{{ t('config.eyebrow') }}</div><h1>{{ t('nav.config') }}</h1><p>{{ t('config.intro') }}</p></div><div class="library-actions"><label class="file-button">{{ t('config.import') }}<input type="file" accept="application/json,.json" (change)="importWorkouts($event)"></label><button class="export-button" (click)="exportWorkouts()">{{ t('config.export') }}</button><button class="ai-button" (click)="openAiAssistant()">{{ t('workouts.ai') }}</button><button class="primary-button" (click)="openNewWorkout()"><span>＋</span> {{ t('workouts.create') }}</button></div></section>
+      <section class="config-stats">
+        <div><strong>{{ workouts.length }}</strong><span>{{ t('config.workouts') }}</span></div>
+        <div><strong>{{ totalExercises }}</strong><span>{{ t('config.exercises') }}</span></div>
+        <div><strong>{{ videoLibrary.length }}</strong><span>{{ t('config.videos') }}</span></div>
+        <div [class.warn]="missingVideoCount > 0"><strong>{{ missingVideoCount }}</strong><span>{{ t('config.noVideo') }}</span></div>
+      </section>
+      <section class="config-card">
+        <div class="config-card-heading"><div><h2>{{ t('config.langTitle') }}</h2><p>{{ t('config.langText') }}</p></div>
+          <div class="lang-switch lang-switch-large" role="group" [attr.aria-label]="t('lang.label')">@for (option of langs; track option.code) {<button [class.selected]="lang === option.code" (click)="setLang(option.code)" [attr.aria-pressed]="lang === option.code">{{ option.label }}</button>}</div>
+        </div>
+      </section>
+      <section class="config-card">
+        <div class="config-card-heading"><div><h2>{{ t('config.sessionsTitle') }}</h2><p>{{ t('config.sessionsText') }}</p></div><button class="text-link danger-link" (click)="resetWorkouts()">{{ t('config.reset') }}</button></div>
+        <div class="config-list">
+          @for (workout of workouts; track workout.id; let i = $index) {
+            <article class="config-row" [attr.data-color]="workout.color">
+              <span class="config-swatch"></span>
+              <div class="config-main">
+                <h3>{{ workout.name }} @if (workout.optional) {<small class="level-pill">{{ t('config.optional') }}</small>}</h3>
+                <p>{{ levelLabel(workout.level) }} · {{ workout.duration }} min · {{ workout.exercises.length }} {{ t('config.exercises') }}</p>
+                <div class="config-thumbs">
+                  @for (exercise of workout.exercises; track exercise.id) {
+                    @if (exercise.video) {<button class="thumb" (click)="previewVideo = exercise.video" [title]="exercise.name"><video [src]="videoUrl(exercise.video)" muted playsinline preload="metadata"></video></button>} @else {<span class="thumb thumb-missing" [title]="t('config.noVideoFor', { name: exercise.name })">?</span>}
+                  }
+                </div>
+              </div>
+              <div class="config-actions">
+                <button class="icon-button" (click)="moveWorkout(i, -1)" [disabled]="i === 0" [attr.aria-label]="t('config.up')">↑</button>
+                <button class="icon-button" (click)="moveWorkout(i, 1)" [disabled]="i === workouts.length - 1" [attr.aria-label]="t('config.down')">↓</button>
+                <button class="icon-button" (click)="openEditWorkout(workout)" [attr.aria-label]="t('card.edit')">✎</button>
+                <button class="icon-button" (click)="duplicateWorkout(workout)" [attr.aria-label]="t('config.duplicate')">⧉</button>
+                <button class="delete-button" (click)="deleteWorkout(workout)" [attr.aria-label]="t('card.delete')">×</button>
+              </div>
+            </article>
+          } @empty {
+            <div class="empty-state"><span>✳</span><h3>{{ t('config.emptyTitle') }}</h3><p>{{ t('config.emptyText') }}</p></div>
+          }
+        </div>
+      </section>
+      <section class="config-card data-card">
+        <div class="config-card-heading"><div><h2>{{ t('data.title') }}</h2><p>{{ t('data.text') }}</p></div></div>
+        <div class="data-grid">
+          <div class="data-block">
+            <label class="toggle-row"><input type="checkbox" [ngModel]="settings.autoSave" (ngModelChange)="toggleAutoSave($event)"><span class="toggle"></span><span><strong>{{ t('data.autoSave') }}</strong><small>{{ settings.autoSave ? t('data.autoSaveHint') : t('data.autoSaveOff') }}</small></span></label>
+            <p class="data-meta">{{ t('data.items', { workouts: workouts.length, logs: logs.length, name: profile.name || '—' }) }}<br>{{ t('data.used', { size: storageUsed }) }}</p>
+            <div class="data-actions">
+              <button class="primary-button" (click)="saveNow()">{{ t('data.saveNow') }}</button>
+              <button class="export-button" (click)="requestPersistentStorage()" [disabled]="storagePersisted" [title]="t('data.persistHint')">{{ storagePersisted ? t('data.persisted') : t('data.persist') }}</button>
+            </div>
+          </div>
+          <div class="data-block">
+            <h3>{{ t('data.fileTitle') }}</h3><p>{{ t('data.fileText') }}</p>
+            <div class="data-actions">
+              <button class="export-button" (click)="exportAll()">{{ t('data.exportAll') }}</button>
+              <label class="file-button">{{ t('data.importAll') }}<input type="file" accept="application/json,.json" (change)="importAll($event)"></label>
+            </div>
+            <button class="text-link danger-link" (click)="clearAllData()">{{ t('data.clear') }}</button>
+          </div>
+        </div>
+        <div class="data-block backups-block">
+          <div class="config-card-heading"><div><h3>{{ t('data.backupsTitle') }}</h3><p>{{ t('data.backupsText') }}</p></div><button class="export-button" (click)="createBackup()">{{ t('data.createBackup') }}</button></div>
+          <ul class="backup-list">
+            @for (backup of backups; track backup.id) {
+              <li><span class="backup-icon">⟲</span><div><strong>{{ dateTime(backup.createdAt) }}</strong><small>{{ t('data.backupSummary', { workouts: backup.workouts.length, logs: backup.logs.length }) }}</small></div><button class="export-button" (click)="restoreBackup(backup)">{{ t('data.restore') }}</button><button class="delete-button" (click)="deleteBackup(backup)" [attr.aria-label]="t('card.delete')">×</button></li>
+            } @empty {
+              <li class="muted">{{ t('data.noBackups') }}</li>
+            }
+          </ul>
+        </div>
+      </section>
+      <section class="config-card">
+        <div class="config-card-heading"><div><h2>{{ t('config.videoTitle') }}</h2><p>{{ t('config.videoText', { folder: 'public/videos', index: 'videos/index.json' }) }}</p></div></div>
+        @if (previewVideo) {<div class="video-preview"><video [src]="videoUrl(previewVideo)" autoplay loop muted playsinline controls></video><div><strong>{{ previewVideo }}</strong><span>{{ t('config.usedTimes', { count: videoUsage(previewVideo) }) }}</span><button class="text-link" (click)="previewVideo = null">{{ t('config.close') }}</button></div></div>}
+        <div class="video-library">
+          @for (file of videoLibrary; track file) {
+            <button class="video-tile" [class.selected]="previewVideo === file" (click)="previewVideo = file"><video [src]="videoUrl(file)" muted playsinline preload="metadata"></video><span>{{ file }}</span><small>{{ videoUsage(file) ? t('config.usedShort', { count: videoUsage(file) }) : t('config.unused') }}</small></button>
+          } @empty {
+            <p class="muted">{{ t('config.noVideos') }}</p>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="page-heading"><div><div class="eyebrow">{{ t('history.eyebrow') }}</div><h1>{{ t('nav.history') }}</h1><p>{{ t('history.intro') }}</p></div><div class="history-total"><strong>{{ completedSessions }}</strong><span>{{ t('history.sessions') }}</span></div></section>
+      @if (logs.length) {<div class="history-list">@for (log of recentLogs; track log.startedAt) {<article class="history-card"><span class="history-check">✓</span><div class="history-main"><h3>{{ log.workoutName }}</h3><p>{{ date(log.startedAt) }} · {{ time(log.startedAt) }} – {{ time(log.endedAt) }}</p></div><div class="history-exercises">{{ t('history.intervals', { count: log.exercises.length }) }}</div><span class="history-duration">{{ clock(sessionSeconds(log)) }}</span></article>}</div><button class="text-link danger-link history-clear" (click)="clearHistory()">{{ t('history.clear') }}</button>} @else {<div class="empty-state history-empty"><span>◷</span><h3>{{ t('history.emptyTitle') }}</h3><p>{{ t('history.emptyText') }}</p><button class="primary-button" (click)="setView('workouts')">{{ t('history.seeWorkouts') }}</button></div>}
+    }
+    <nav class="mobile-tabs" [attr.aria-label]="t('nav.mobile')">
+      <button [class.selected]="view === 'home' && !activeWorkout" (click)="setView('home')"><span>⌂</span>{{ t('nav.home') }}</button>
+      <button [class.selected]="view === 'workouts' && !activeWorkout" (click)="setView('workouts')"><span>▤</span>{{ t('nav.workoutsShort') }}</button>
+      <button [class.selected]="view === 'history' && !activeWorkout" (click)="setView('history')"><span>◷</span>{{ t('nav.history') }}</button>
+      <button [class.selected]="view === 'config' && !activeWorkout" (click)="setView('config')"><span>⚙</span>{{ t('nav.configShort') }}</button>
+    </nav>
+    <footer class="footer"><span>mouvement<span class="brand-dot">.</span></span><span>{{ t('brand.tagline') }}</span></footer>
+  </main>
+</div>
+
+@if (modal === 'profile') {<div class="modal-backdrop" (click)="modal = null"><section class="modal-card profile-modal" (click)="$event.stopPropagation()"><button class="modal-close" (click)="modal = null">×</button><div class="eyebrow">{{ t('profileModal.eyebrow') }}</div><h2>{{ t('profileModal.title') }}</h2><p class="modal-intro">{{ t('profileModal.intro') }}</p><label>{{ t('profileModal.name') }}<input [(ngModel)]="profile.name" [placeholder]="t('profileModal.namePh')" autofocus></label><div class="form-row"><label>{{ t('profileModal.age') }}<input type="number" min="1" max="120" [(ngModel)]="profile.age" [placeholder]="t('profileModal.agePh')"></label><label>{{ t('profileModal.objective') }}<select [(ngModel)]="profile.objective">@for (objective of objectives; track objective) {<option [value]="objective">{{ objectiveLabel(objective) }}</option>}</select></label></div><label>{{ t('profileModal.weight') }} <span class="optional-label">{{ t('profileModal.optional') }}</span><div class="input-suffix"><input type="number" min="0" step="0.5" [(ngModel)]="profile.weightLoss" placeholder="0"><span>kg</span></div></label><label>{{ t('lang.label') }}<select [ngModel]="lang" (ngModelChange)="setLang($event)">@for (option of langs; track option.code) {<option [value]="option.code">{{ option.label }}</option>}</select></label><button class="primary-button full-button" (click)="saveProfile()">{{ t('profileModal.save') }} <span>→</span></button></section></div>}
+
+@if (modal === 'workout') {
+  <div class="modal-backdrop" (click)="modal = null">
+    <section class="modal-card workout-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="modal = null">×</button>
+      <div class="eyebrow">{{ t('editor.eyebrow') }}</div>
+      <h2>{{ editingId ? t('editor.edit') : t('editor.create') }}</h2>
+      <p class="modal-intro">{{ t('editor.intro') }}</p>
+      @if (!editingId) {<button class="ai-banner" (click)="openAiAssistant()"><span>✨</span><div><strong>{{ t('editor.aiTitle') }}</strong><small>{{ t('editor.aiText') }}</small></div><b>→</b></button>}
+      <div class="form-row">
+        <label>{{ t('editor.name') }}<input [(ngModel)]="draft.name" [placeholder]="t('editor.namePh')"></label>
+        <label>{{ t('editor.duration') }}<input type="number" min="1" [(ngModel)]="draft.duration"></label>
+      </div>
+      <label>{{ t('editor.subtitle') }}<input [(ngModel)]="draft.subtitle" [placeholder]="t('editor.subtitlePh')"></label>
+      <div class="form-row">
+        <label>{{ t('editor.level') }}<select [(ngModel)]="draft.level">@for (level of levels; track level) {<option [value]="level">{{ levelLabel(level) }}</option>}</select></label>
+        <label>{{ t('editor.color') }}<select [(ngModel)]="draft.color">@for (color of colors; track color) {<option [value]="color">{{ colorLabel(color) }}</option>}</select></label>
+      </div>
+      <div class="exercise-editor-heading">
+        <div><h3>{{ t('editor.exercises') }}</h3><p>{{ t('editor.exercisesText') }}</p></div>
+        <button class="add-exercise" (click)="addExercise()">{{ t('editor.add') }}</button>
+      </div>
+      <div class="exercise-editor-list">
+        @for (exercise of draft.exercises; track exercise.id; let i = $index) {
+          <div class="exercise-editor">
+            <span class="editor-number">{{ (i + 1).toString().padStart(2, '0') }}</span>
+            <div class="editor-fields">
+              <input [(ngModel)]="exercise.name" [name]="'exercise-name-' + i" [placeholder]="t('editor.exerciseName')">
+              <div class="form-row">
+                <select [(ngModel)]="exercise.phase" [name]="'exercise-phase-' + i">
+                  @for (phase of phases; track phase) {<option [value]="phase">{{ phaseLabel(phase) }}</option>}
+                </select>
+                <div class="input-suffix">
+                  <input type="number" min="10" [(ngModel)]="exercise.seconds" [name]="'exercise-seconds-' + i"><span>sec</span>
+                </div>
+                <input [(ngModel)]="exercise.tip" [name]="'exercise-tip-' + i" [placeholder]="t('editor.tip')">
+              </div>
+              <div class="video-field">
+                @if (exercise.video) {<video class="video-field-preview" [src]="videoUrl(exercise.video)" autoplay loop muted playsinline></video>} @else {<span class="video-field-preview empty">▶</span>}
+                <input [(ngModel)]="exercise.video" [name]="'exercise-video-' + i" list="video-files" [placeholder]="t('editor.video')" (focus)="suggestVideo(exercise)">
+                @if (exercise.video) {<button class="remove-exercise" (click)="exercise.video = undefined" [attr.aria-label]="t('editor.removeVideo')">×</button>}
+              </div>
+            </div>
+            <button class="remove-exercise" (click)="removeExercise(i)" [disabled]="draft.exercises.length < 2" [attr.aria-label]="t('editor.removeExercise')">×</button>
+          </div>
+        }
+      </div>
+      <datalist id="video-files">@for (file of videoLibrary; track file) {<option [value]="file"></option>}</datalist>
+      <label class="optional-check"><input type="checkbox" [(ngModel)]="draft.optional"> {{ t('editor.optional') }}</label>
+      <button class="primary-button full-button" (click)="saveWorkout()">{{ editingId ? t('editor.saveChanges') : t('editor.createMine') }} <span>→</span></button>
+    </section>
+  </div>
+}
+
+@if (modal === 'ai') {
+  <div class="modal-backdrop" (click)="modal = null">
+    <section class="modal-card ai-modal" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="modal = null">×</button>
+      <div class="eyebrow">{{ t('ai.eyebrow') }}</div>
+      <h2>{{ t('ai.title') }}</h2>
+      <p class="modal-intro">{{ t('ai.intro') }}</p>
+
+      <div class="ai-step">
+        <div class="ai-step-title"><span>1</span>{{ t('ai.step1') }}</div>
+        <div class="form-row">
+          <label>{{ t('ai.duration') }}<input type="number" min="5" max="90" [(ngModel)]="aiRequest.duration"></label>
+          <label>{{ t('ai.level') }}<select [(ngModel)]="aiRequest.level">@for (level of levels; track level) {<option [value]="level">{{ levelLabel(level) }}</option>}</select></label>
+        </div>
+        <div class="form-row">
+          <label>{{ t('ai.intensity') }}<select [(ngModel)]="aiRequest.intensity">@for (value of aiOptions.intensity; track value) {<option [value]="value">{{ aiOptionLabel('intensity', value) }}</option>}</select></label>
+          <label>{{ t('ai.focus') }}<select [(ngModel)]="aiRequest.focus">@for (value of aiOptions.focus; track value) {<option [value]="value">{{ aiOptionLabel('focus', value) }}</option>}</select></label>
+        </div>
+        <div class="form-row">
+          <label>{{ t('ai.impact') }}<select [(ngModel)]="aiRequest.impact">@for (value of aiOptions.impact; track value) {<option [value]="value">{{ aiOptionLabel('impact', value) }}</option>}</select></label>
+          <label>{{ t('ai.equipment') }}<select [(ngModel)]="aiRequest.equipment">@for (value of aiOptions.equipment; track value) {<option [value]="value">{{ aiOptionLabel('equipment', value) }}</option>}</select></label>
+        </div>
+        <label>{{ t('ai.space') }}<select [(ngModel)]="aiRequest.space">@for (value of aiOptions.space; track value) {<option [value]="value">{{ aiOptionLabel('space', value) }}</option>}</select></label>
+        <label>{{ t('ai.notes') }}<textarea rows="2" [(ngModel)]="aiRequest.notes" [placeholder]="t('ai.notesPh')"></textarea></label>
+        <button class="primary-button full-button" (click)="buildAiPrompt()">{{ aiPrompt ? t('ai.rebuild') : t('ai.build') }} <span>→</span></button>
+      </div>
+
+      @if (aiPrompt) {
+        <div class="ai-step">
+          <div class="ai-step-title"><span>2</span>{{ t('ai.step2') }}</div>
+          <textarea class="ai-prompt" rows="7" readonly [value]="aiPrompt"></textarea>
+          <div class="ai-actions">
+            <button class="primary-button" (click)="copyAiPrompt()">{{ aiCopied ? t('ai.copied') : t('ai.copy') }}</button>
+            <button class="export-button" (click)="openChatGpt()">{{ t('ai.open') }}</button>
+          </div>
+          <p class="ai-hint">{{ t('ai.hint2') }}</p>
+        </div>
+
+        <div class="ai-step">
+          <div class="ai-step-title"><span>3</span>{{ t('ai.step3') }}</div>
+          <textarea class="ai-response" rows="6" [(ngModel)]="aiResponse" [placeholder]="t('ai.responsePh')"></textarea>
+          <button class="export-button ai-parse" (click)="parseAiResponse()">{{ t('ai.parse') }}</button>
+          @if (aiError) {<p class="ai-error">{{ aiError }}</p>}
+        </div>
+      }
+
+      @if (aiPreview; as preview) {
+        <div class="ai-step ai-preview" [attr.data-color]="preview.color">
+          <div class="ai-step-title"><span>4</span>{{ t('ai.step4') }}</div>
+          <h3>{{ preview.name }}</h3>
+          <p class="ai-preview-meta">{{ preview.subtitle }}<br>{{ t('ai.meta', { level: levelLabel(preview.level), minutes: estimatedMinutes(preview), count: preview.exercises.length, videos: aiPreviewVideoCount }) }}</p>
+          @for (phase of phases; track phase) {
+            @if (previewPhase(phase).length) {
+              <div class="ai-phase">{{ phaseLabel(phase) }}@if (phase === phases[1] && aiPreviewRounds > 1) { <small>{{ t('ai.rounds', { count: aiPreviewRounds }) }}</small>}</div>
+              <ul class="ai-exercises">
+                @for (exercise of previewPhase(phase); track exercise.id) {
+                  <li>
+                    @if (exercise.video) {<video [src]="videoUrl(exercise.video)" autoplay loop muted playsinline [title]="exercise.video"></video>} @else {<span class="ai-novideo">?</span>}
+                    <div><strong>{{ exercise.name }}</strong><small>{{ exercise.tip }}</small>@if (exercise.video) {<small class="ai-video-file">▶ {{ exercise.video }}@if (aiGuessedVideos.has(exercise.id)) { · {{ t('ai.videoAuto') }}}</small>}</div>
+                    <em>{{ exercise.seconds }} s</em>
+                  </li>
+                }
+              </ul>
+            }
+          }
+          <div class="ai-actions">
+            <button class="primary-button" (click)="acceptAiWorkout()">{{ t('ai.accept') }}</button>
+            <button class="export-button" (click)="editAiWorkout()">{{ t('ai.editFirst') }}</button>
+          </div>
+          <p class="ai-hint">{{ t('ai.hint4') }}</p>
+        </div>
+      }
+    </section>
+  </div>
+}
+
+@if (notice) {<div class="toast"><span>✳</span>{{ notice }}</div>}

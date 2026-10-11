@@ -1,0 +1,426 @@
+[
+  {
+    "id": "seance-a",
+    "name": "Séance A — Cardio de Base",
+    "subtitle": "Un premier pas, tout simplement.",
+    "duration": 20,
+    "level": "Débutant",
+    "color": "mint",
+    "optional": false,
+    "exercises": [
+      {
+        "id": "a1",
+        "name": "Marche active",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Marchez sur place en balançant les bras naturellement.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "a2",
+        "name": "Talons-fesses",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Ramenez doucement les talons vers les fessiers.",
+        "video": "talons-fesses.mp4"
+      },
+      {
+        "id": "a3",
+        "name": "Pas latéraux",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Déplacez-vous de côté en gardant les genoux souples.",
+        "video": "pas-lateraux.mp4"
+      },
+      {
+        "id": "a4",
+        "name": "Cercles d’épaules",
+        "phase": "Échauffement",
+        "seconds": 60,
+        "tip": "Faites de petits cercles contrôlés avec les épaules.",
+        "video": "cercles-depaules.mp4"
+      },
+      {
+        "id": "a5",
+        "name": "Jumping jacks doux",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Écartez un pied à la fois et levez les bras sans saut. Version douce, à votre rythme.",
+        "video": "jumping-jacks-doux.mp4"
+      },
+      {
+        "id": "a6",
+        "name": "High knees",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Levez les genoux à hauteur confortable, en alternant.",
+        "video": "high-knees.mp4"
+      },
+      {
+        "id": "a7",
+        "name": "Mountain climbers lents",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "En planche inclinée contre un mur ou une chaise, ramenez un genou à la fois.",
+        "video": "mountain-climbers-lents.mp4"
+      },
+      {
+        "id": "a8",
+        "name": "Marche active",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Marchez sur place et respirez régulièrement.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "a8-pause",
+        "name": "Récupération active",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relâchez les épaules, respirez et préparez-vous au prochain tour.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "a9",
+        "name": "Marche lente",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Ralentissez progressivement en prenant de grandes respirations.",
+        "video": "marche-lente.mp4"
+      },
+      {
+        "id": "a10",
+        "name": "Étirement quadriceps",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Tenez-vous si besoin. Amenez doucement le talon vers la fesse.",
+        "video": "etirement-quadriceps.mp4"
+      },
+      {
+        "id": "a11",
+        "name": "Étirement ischios",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Tendez une jambe devant vous et inclinez le buste sans forcer.",
+        "video": "etirement-ischios.mp4"
+      }
+    ]
+  },
+  {
+    "id": "seance-b",
+    "name": "Séance B — Cardio + Renforcement léger",
+    "subtitle": "Du mouvement, avec douceur.",
+    "duration": 20,
+    "level": "Modéré",
+    "color": "peach",
+    "optional": false,
+    "exercises": [
+      {
+        "id": "b1",
+        "name": "Marche",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Marchez sur place en gardant une posture détendue.",
+        "video": "marche.mp4"
+      },
+      {
+        "id": "b2",
+        "name": "Step jacks",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Faites un pas de côté puis revenez, en ajoutant les bras si vous le souhaitez.",
+        "video": "step-jacks.mp4"
+      },
+      {
+        "id": "b3",
+        "name": "Rotation du tronc",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Tournez doucement le haut du corps de chaque côté.",
+        "video": "rotation-du-tronc.mp4"
+      },
+      {
+        "id": "b4",
+        "name": "Squats dynamiques",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Poussez les hanches en arrière, puis revenez debout. Gardez les pieds au sol.",
+        "video": "squats-dynamiques.mp4"
+      },
+      {
+        "id": "b5",
+        "name": "Step-up (montée de marche)",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Montez et descendez une marche stable, en alternant les jambes.",
+        "video": "step-up-montee-de-marche.mp4"
+      },
+      {
+        "id": "b6",
+        "name": "Planche dynamique",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "En appui contre un mur, pliez puis tendez les bras en gardant le corps aligné.",
+        "video": "planche-dynamique.mp4"
+      },
+      {
+        "id": "b7",
+        "name": "Marche active",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Marchez sur place et reprenez votre souffle.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "b7-pause",
+        "name": "Récupération active",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relâchez les épaules, respirez et préparez-vous au prochain tour.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "b8",
+        "name": "Respiration",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Inspirez lentement par le nez, puis soufflez doucement.",
+        "video": "respiration.mp4"
+      },
+      {
+        "id": "b9",
+        "name": "Étirement mollets",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Un pied derrière l’autre, poussez doucement le talon arrière vers le sol.",
+        "video": "etirement-mollets.mp4"
+      },
+      {
+        "id": "b10",
+        "name": "Étirement dos",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Arrondissez doucement le dos et relâchez les épaules.",
+        "video": "etirement-dos.mp4"
+      }
+    ]
+  },
+  {
+    "id": "seance-c",
+    "name": "Séance C — Cardio Doux",
+    "subtitle": "Retrouvez votre rythme.",
+    "duration": 20,
+    "level": "Débutant",
+    "color": "lavender",
+    "optional": false,
+    "exercises": [
+      {
+        "id": "c1",
+        "name": "Marche lente",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Commencez par une marche tranquille sur place.",
+        "video": "marche-lente.mp4"
+      },
+      {
+        "id": "c2",
+        "name": "Mobilité des hanches",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Faites des cercles lents avec les hanches, dans les deux sens.",
+        "video": "mobilite-des-hanches.mp4"
+      },
+      {
+        "id": "c3",
+        "name": "Pas latéraux",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Déplacez-vous de côté en gardant les genoux souples.",
+        "video": "pas-lateraux.mp4"
+      },
+      {
+        "id": "c4",
+        "name": "Course sur place",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Trottinez doucement sur place, ou remplacez par une marche rapide.",
+        "video": "course-sur-place.mp4"
+      },
+      {
+        "id": "c5",
+        "name": "Talons-fesses rapides",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Ramenez alternativement les talons vers les fessiers, à votre rythme.",
+        "video": "talons-fesses-rapides.mp4"
+      },
+      {
+        "id": "c6",
+        "name": "Code Ondulé",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Enchaînez des pas fluides en déplaçant doucement les bras d’un côté à l’autre.",
+        "video": "code-ondule.mp4"
+      },
+      {
+        "id": "c7",
+        "name": "Marche active",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Marchez sur place pour garder le mouvement en douceur.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "c7-pause",
+        "name": "Récupération active",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relâchez les épaules, respirez et préparez-vous au prochain tour.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "c8",
+        "name": "Respiration",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Inspirez lentement, puis soufflez en relâchant les épaules.",
+        "video": "respiration.mp4"
+      },
+      {
+        "id": "c9",
+        "name": "Étirement quadriceps",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Tenez-vous si besoin et amenez le talon vers la fesse sans forcer.",
+        "video": "etirement-quadriceps.mp4"
+      },
+      {
+        "id": "c10",
+        "name": "Étirement bras/épaules",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Étirez un bras devant la poitrine puis changez de côté.",
+        "video": "etirement-bras-epaules.mp4"
+      }
+    ]
+  },
+  {
+    "id": "seance-d",
+    "name": "Séance D — Cardio Intensité Modérée",
+    "subtitle": "À essayer quand vous en avez envie.",
+    "duration": 20,
+    "level": "Modéré",
+    "color": "blue",
+    "optional": true,
+    "exercises": [
+      {
+        "id": "d1",
+        "name": "Marche",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Marchez sur place pour vous échauffer progressivement.",
+        "video": "marche.mp4"
+      },
+      {
+        "id": "d2",
+        "name": "Step jacks",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Faites un pas de côté puis revenez en ajoutant les bras.",
+        "video": "step-jacks.mp4"
+      },
+      {
+        "id": "d3",
+        "name": "Rotation du tronc",
+        "phase": "Échauffement",
+        "seconds": 80,
+        "tip": "Tournez doucement le haut du corps de chaque côté.",
+        "video": "rotation-du-tronc.mp4"
+      },
+      {
+        "id": "d4",
+        "name": "Burpee version douce",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Posez les mains sur une chaise stable, reculez un pied puis l’autre, et revenez debout.",
+        "video": "burpee-version-douce.mp4"
+      },
+      {
+        "id": "d5",
+        "name": "High knees",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Levez les genoux à hauteur confortable en alternant.",
+        "video": "high-knees.mp4"
+      },
+      {
+        "id": "d6",
+        "name": "Squat + montée sur pointe",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Faites un petit squat, puis montez sur la pointe des pieds en vous redressant.",
+        "video": "squat-montee-sur-pointe.mp4"
+      },
+      {
+        "id": "d7",
+        "name": "Marche active",
+        "phase": "Bloc principal",
+        "seconds": 45,
+        "rounds": 3,
+        "tip": "Marchez sur place pour garder un effort régulier.",
+        "video": "marche-active.mp4"
+      },
+      {
+        "id": "d7-pause",
+        "name": "Récupération active",
+        "phase": "Bloc principal",
+        "seconds": 60,
+        "rounds": 3,
+        "tip": "Relâchez les épaules, respirez et préparez-vous au prochain tour.",
+        "video": "recuperation-active.mp4"
+      },
+      {
+        "id": "d8",
+        "name": "Respiration",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Inspirez lentement par le nez, puis soufflez doucement.",
+        "video": "respiration.mp4"
+      },
+      {
+        "id": "d9",
+        "name": "Étirement jambes",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Étirez doucement l’avant et l’arrière des jambes, sans rebond.",
+        "video": "etirement-jambes.mp4"
+      },
+      {
+        "id": "d10",
+        "name": "Étirement dos",
+        "phase": "Retour au calme",
+        "seconds": 80,
+        "tip": "Arrondissez doucement le dos et relâchez les épaules.",
+        "video": "etirement-dos.mp4"
+      }
+    ]
+  }
+]
