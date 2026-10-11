@@ -73,6 +73,22 @@ Everything is saved in the browser's **localStorage** under these keys:
 
 **Exporter / Importer JSON** at the top of Configuration still handles workouts only.
 
+### Export to your computer or Google Drive
+
+The full backup (`mouvement-backup-YYYY-MM-DD-HH-MM.json`, containing profile, history, workouts, and settings) can be saved several ways:
+
+- **↓ Export everything:** downloads the file to your Downloads folder.
+- **💾 Save as…** (Chrome/Edge desktop): lets you pick the folder. If you pick a **Google Drive for desktop** folder, the file syncs to Drive.
+- **↗ Share** (phones): opens the share sheet, from which you can send the file to Google Drive, email, and so on.
+- **Open Google Drive ↗:** opens drive.google.com so you can drag the downloaded file in.
+- **Google Drive (direct):** sign in with Google, then save, list, restore, or delete backups right in your Drive. This option needs a one-time setup:
+  1. In the [Google Cloud Console](https://console.cloud.google.com/), create a project and enable the **Google Drive API**.
+  2. Configure the **OAuth consent screen** as External, add the scope `.../auth/drive.file`, and add yourself as a test user (or publish the app).
+  3. Go to **Credentials → Create credentials → OAuth client ID → Web application**. Under **Authorized JavaScript origins**, add `https://danieloseguin67.github.io` and `http://localhost:4200`.
+  4. Paste the Client ID (`…apps.googleusercontent.com`) in **Configuration → Google Drive**. To make it the default for every visitor, set `GOOGLE_CLIENT_ID` in [`src/app/google-drive.ts`](src/app/google-drive.ts) instead.
+
+  The app uses the `drive.file` scope, so it can only see files it created itself. The access token lives in memory only (about 1 hour), and the Client ID isn't included in exported backups.
+
 ### Workout JSON format
 
 ```json

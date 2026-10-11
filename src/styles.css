@@ -67,3 +67,15 @@
 .history-clear{display:block;margin:18px auto 0}
 .ai-video-file{opacity:.6}
 @media (max-width:760px){.data-grid{grid-template-columns:1fr}.backup-list li{flex-wrap:wrap}.unsaved-bar{flex-direction:column;align-items:stretch}}
+
+/* google drive */
+.drive-block{margin-top:16px}
+.drive-logo{display:inline-block;color:#1a73e8;transform:scale(.9)}
+.drive-subtitle{margin:6px 0 0;font-size:14px}
+.drive-manual{margin-top:12px}
+.drive-setup{margin-top:8px;font-size:13px}
+.drive-setup summary{cursor:pointer;font-weight:600}
+.drive-setup p{margin:8px 0;word-break:break-word}
+.drive-client-row{display:flex;gap:8px;flex-wrap:wrap}
+.drive-client-row input{flex:1;min-width:220px;padding:9px 12px;border-radius:10px;border:1px solid rgba(0,0,0,.15);font:inherit}
+.data-actions button:disabled,.backup-list button:disabled{opacity:.55;cursor:default}

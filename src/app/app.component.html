@@ -100,10 +100,46 @@
             <h3>{{ t('data.fileTitle') }}</h3><p>{{ t('data.fileText') }}</p>
             <div class="data-actions">
               <button class="export-button" (click)="exportAll()">{{ t('data.exportAll') }}</button>
+              @if (canSaveAs) {<button class="export-button" (click)="saveAsFile()" [title]="t('data.saveAsHint')">{{ t('data.saveAs') }}</button>}
               <label class="file-button">{{ t('data.importAll') }}<input type="file" accept="application/json,.json" (change)="importAll($event)"></label>
             </div>
             <button class="text-link danger-link" (click)="clearAllData()">{{ t('data.clear') }}</button>
           </div>
+        </div>
+        <div class="data-block drive-block">
+          <div class="config-card-heading"><div><h3><span class="drive-logo">▲</span> {{ t('drive.title') }}</h3><p>{{ t('drive.text') }}</p></div>
+            @if (drive.connected) {<button class="text-link" (click)="disconnectDrive()">{{ t('drive.disconnect') }}</button>}
+          </div>
+          @if (googleClientId) {
+            <div class="data-actions">
+              @if (!drive.connected) {<button class="primary-button" (click)="connectDrive()" [disabled]="driveBusy">{{ driveBusy ? t('drive.busy') : t('drive.connect') }}</button>}
+              @else {
+                <button class="primary-button" (click)="saveToDrive()" [disabled]="driveBusy">{{ driveBusy ? t('drive.busy') : t('drive.saveTo') }}</button>
+                <button class="export-button" (click)="refreshDrive()" [disabled]="driveBusy">{{ t('drive.refresh') }}</button>
+              }
+            </div>
+            @if (drive.connected) {
+              <h4 class="drive-subtitle">{{ t('drive.files') }}</h4>
+              <ul class="backup-list">
+                @for (file of driveFiles; track file.id) {
+                  <li><span class="backup-icon">☁</span><div><strong>{{ dateTime(file.modifiedTime) }}</strong><small>{{ file.name }} · {{ fileSize(file.size) }}</small></div><button class="export-button" (click)="restoreFromDrive(file)" [disabled]="driveBusy">{{ t('data.restore') }}</button><button class="delete-button" (click)="deleteFromDrive(file)" [disabled]="driveBusy" [attr.aria-label]="t('card.delete')">×</button></li>
+                } @empty {
+                  <li class="muted">{{ t('drive.noFiles') }}</li>
+                }
+              </ul>
+            }
+          }
+          <div class="data-actions drive-manual">
+            @if (canShareFiles) {<button class="export-button" (click)="shareBackup()">{{ t('data.share') }}</button>}
+            <button class="export-button" (click)="openGoogleDriveSite()">{{ t('data.openDrive') }}</button>
+          </div>
+          <p class="data-meta">{{ t('data.driveManual') }}</p>
+          <details class="drive-setup" [open]="!googleClientId">
+            <summary>{{ googleClientId ? t('drive.changeClient') : t('drive.setupTitle') }}</summary>
+            <p>{{ t('drive.setupText', { origin: originUrl }) }}</p>
+            <div class="drive-client-row"><input [(ngModel)]="clientIdDraft" [placeholder]="'1234-abc.apps.googleusercontent.com'" [attr.aria-label]="t('drive.clientId')"><button class="export-button" (click)="saveClientId()">{{ t('drive.saveClient') }}</button></div>
+          </details>
+          @if (driveError) {<p class="ai-error">{{ driveError }}</p>}
         </div>
         <div class="data-block backups-block">
           <div class="config-card-heading"><div><h3>{{ t('data.backupsTitle') }}</h3><p>{{ t('data.backupsText') }}</p></div><button class="export-button" (click)="createBackup()">{{ t('data.createBackup') }}</button></div>

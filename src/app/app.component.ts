@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import seedWorkoutsFr from './workouts.json';
 import seedWorkoutsEn from './workouts.en.json';
 import { I18N, I18nKey, Lang, LANGS } from './i18n';
+import { DriveFile, GOOGLE_CLIENT_ID, GoogleDrive } from './google-drive';
 
 interface Exercise { id: string; name: string; phase: string; seconds: number; rounds?: number; tip: string; video?: string; }
 interface Workout { id: string; name: string; subtitle: string; duration: number; level: string; color: string; optional?: boolean; exercises: Exercise[]; }
@@ -11,7 +12,8 @@ interface Profile { name: string; age: number | null; objective: 'Remise en form
 interface ExerciseLog { name: string; startedAt: string; endedAt: string; }
 interface SessionLog { workoutName: string; startedAt: string; endedAt: string; exercises: ExerciseLog[]; }
 interface RunExercise { exercise: Exercise; round: number; }
-interface Settings { lang: Lang; autoSave: boolean; }
+interface Settings { lang: Lang; autoSave: boolean; googleClientId?: string; }
+type SaveFilePicker = (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<{ createWritable(): Promise<{ write(data: Blob): Promise<void>; close(): Promise<void> }> }>;
 interface AppData { workouts: Workout[]; logs: SessionLog[]; profile: Profile; }
 interface Backup extends AppData { id: string; createdAt: string; }
 interface ActiveSessionState { workout: Workout; exerciseIndex: number; remaining: number; sessionStartedAt: string; exerciseLogs: ExerciseLog[]; }
@@ -60,6 +62,14 @@ export class AppComponent implements OnInit, OnDestroy {
   backups: Backup[] = [];
   dirty = false;
   storagePersisted = false;
+  canShareFiles = false;
+  readonly canSaveAs = typeof (window as unknown as { showSaveFilePicker?: unknown }).showSaveFilePicker === 'function';
+  private readonly zone = inject(NgZone);
+  readonly drive = new GoogleDrive(fn => this.zone.run(fn));
+  driveFiles: DriveFile[] = [];
+  driveBusy = false;
+  driveError = '';
+  clientIdDraft = '';
   view: View = 'home';
   videoLibrary: string[] = [];
   previewVideo: string | null = null;
@@ -91,7 +101,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const stored = this.load<Partial<Settings>>(KEYS.settings, {});
-    this.settings = { lang: stored.lang === 'en' ? 'en' : 'fr', autoSave: stored.autoSave !== false };
+    this.settings = { lang: stored.lang === 'en' ? 'en' : 'fr', autoSave: stored.autoSave !== false, googleClientId: typeof stored.googleClientId === 'string' ? stored.googleClientId : '' };
+    this.clientIdDraft = this.settings.googleClientId ?? '';
+    try { this.canShareFiles = !!navigator.canShare?.({ files: [new File(['{}'], 'test.json', { type: 'application/json' })] }); } catch { this.canShareFiles = false; }
     this.workouts = this.load(KEYS.workouts, SEEDS[this.lang]);
     this.profile = this.load(KEYS.profile, this.profile);
     this.logs = this.load(KEYS.logs, []);
@@ -182,28 +194,83 @@ export class AppComponent implements OnInit, OnDestroy {
     this.backups = this.backups.filter(item => item.id !== backup.id); this.writeKey(KEYS.backups, this.backups); this.toast(this.t('toast.backupDeleted'));
   }
   dateTime(iso: string): string { return new Intl.DateTimeFormat(this.locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso)); }
-  exportAll(): void {
-    const payload = { app: 'mouvement', version: 1, exportedAt: new Date().toISOString(), settings: this.settings, ...this.snapshot() };
-    this.download(payload, `mouvement-backup-${new Date().toISOString().slice(0, 10)}.json`);
+  private backupPayload(): string {
+    return JSON.stringify({ app: 'mouvement', version: 1, exportedAt: new Date().toISOString(), settings: { lang: this.settings.lang, autoSave: this.settings.autoSave }, ...this.snapshot() }, null, 2);
   }
+  private backupFileName(): string { return `mouvement-backup-${new Date().toISOString().slice(0, 16).replace(/[T:]/g, '-')}.json`; }
+  exportAll(): void { this.downloadText(this.backupPayload(), this.backupFileName()); this.toast(this.t('toast.exported')); }
+  async saveAsFile(): Promise<void> {
+    const picker = (window as unknown as { showSaveFilePicker?: SaveFilePicker }).showSaveFilePicker;
+    if (!picker) { this.exportAll(); return; }
+    try {
+      const handle = await picker({ suggestedName: this.backupFileName(), types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }] });
+      const writable = await handle.createWritable();
+      await writable.write(new Blob([this.backupPayload()], { type: 'application/json' })); await writable.close();
+      this.toast(this.t('toast.exported'));
+    } catch (error) { if ((error as DOMException)?.name !== 'AbortError') this.toast(this.t('toast.exportFailed')); }
+  }
+  async shareBackup(): Promise<void> {
+    const file = new File([this.backupPayload()], this.backupFileName(), { type: 'application/json' });
+    try { await navigator.share({ files: [file], title: 'Mouvement' }); }
+    catch (error) { if ((error as DOMException)?.name !== 'AbortError') { this.exportAll(); } }
+  }
+  openGoogleDriveSite(): void { window.open('https://drive.google.com/drive/my-drive', '_blank', 'noopener'); }
   importAll(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result)) as Partial<AppData & { app: string; settings: Partial<Settings> }>;
-        if (!parsed || parsed.app !== 'mouvement' || !this.isWorkoutList(parsed.workouts) || !Array.isArray(parsed.logs ?? []) || typeof (parsed.profile ?? {}) !== 'object') throw new Error('invalid');
-        if (window.confirm(this.t('confirm.importAll'))) {
-          this.applyData({ workouts: parsed.workouts, logs: (parsed.logs ?? []) as SessionLog[], profile: (parsed.profile ?? this.profile) as Profile });
-          if (parsed.settings?.lang === 'fr' || parsed.settings?.lang === 'en') this.setLang(parsed.settings.lang);
-          this.toast(this.t('toast.allImported'));
-        }
-      } catch { this.toast(this.t('toast.badBackup')); }
-      input.value = '';
-    };
+    reader.onload = () => { this.importBackupText(String(reader.result)); input.value = ''; };
     reader.readAsText(file);
   }
+  private importBackupText(text: string): boolean {
+    try {
+      const parsed = JSON.parse(text) as Partial<AppData & { app: string; settings: Partial<Settings> }>;
+      if (!parsed || parsed.app !== 'mouvement' || !this.isWorkoutList(parsed.workouts) || !Array.isArray(parsed.logs ?? []) || typeof (parsed.profile ?? {}) !== 'object') throw new Error('invalid');
+      if (!window.confirm(this.t('confirm.importAll'))) return false;
+      this.applyData({ workouts: parsed.workouts, logs: (parsed.logs ?? []) as SessionLog[], profile: (parsed.profile ?? this.profile) as Profile });
+      if (parsed.settings?.lang === 'fr' || parsed.settings?.lang === 'en') this.setLang(parsed.settings.lang);
+      this.toast(this.t('toast.allImported'));
+      return true;
+    } catch { this.toast(this.t('toast.badBackup')); return false; }
+  }
+
+  // ---------- Google Drive ----------
+  get googleClientId(): string { return (this.settings.googleClientId || GOOGLE_CLIENT_ID).trim(); }
+  get originUrl(): string { return location.origin; }
+  saveClientId(): void {
+    const value = this.clientIdDraft.trim();
+    if (value && !/^[\w-]+\.apps\.googleusercontent\.com$/.test(value)) { this.driveError = this.t('drive.badClientId'); return; }
+    this.driveError = '';
+    if (!value) this.drive.disconnect();
+    this.settings = { ...this.settings, googleClientId: value }; this.writeKey(KEYS.settings, this.settings);
+    this.toast(this.t(value ? 'drive.clientSaved' : 'drive.clientRemoved'));
+  }
+  private async driveTask(task: () => Promise<void>): Promise<void> {
+    this.driveBusy = true; this.driveError = '';
+    try {
+      if (!this.drive.connected) await this.drive.connect(this.googleClientId);
+      await task();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.driveError = this.t('drive.error', { detail: message === 'not-connected' ? this.t('drive.expired') : message });
+    } finally { this.zone.run(() => { this.driveBusy = false; }); }
+  }
+  connectDrive(): Promise<void> { return this.driveTask(async () => { this.driveFiles = await this.drive.list(); this.toast(this.t('drive.connected')); }); }
+  disconnectDrive(): void { this.drive.disconnect(); this.driveFiles = []; this.toast(this.t('drive.disconnected')); }
+  refreshDrive(): Promise<void> { return this.driveTask(async () => { this.driveFiles = await this.drive.list(); }); }
+  saveToDrive(): Promise<void> {
+    return this.driveTask(async () => {
+      const file = await this.drive.upload(this.backupFileName(), this.backupPayload());
+      this.driveFiles = [file, ...this.driveFiles.filter(item => item.id !== file.id)];
+      this.toast(this.t('drive.saved', { name: file.name }));
+    });
+  }
+  restoreFromDrive(file: DriveFile): Promise<void> { return this.driveTask(async () => { this.importBackupText(await this.drive.download(file.id)); }); }
+  deleteFromDrive(file: DriveFile): Promise<void> {
+    if (!window.confirm(this.t('drive.confirmDelete', { name: file.name }))) return Promise.resolve();
+    return this.driveTask(async () => { await this.drive.remove(file.id); this.driveFiles = this.driveFiles.filter(item => item.id !== file.id); this.toast(this.t('drive.deleted')); });
+  }
+  fileSize(size?: string): string { const bytes = Number(size ?? 0); return bytes < 1024 ? `${bytes} B` : `${(bytes / 1024).toFixed(1)} KB`; }
   clearAllData(): void {
     if (!window.confirm(this.t('confirm.clear'))) return;
     this.stopClock(); this.activeWorkout = null; this.running = false;
@@ -215,8 +282,9 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!window.confirm(this.t('confirm.clearHistory'))) return;
     this.logs = []; this.save(KEYS.logs, this.logs); this.toast(this.t('toast.historyCleared'));
   }
-  private download(value: unknown, fileName: string): void {
-    const file = new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' });
+  private download(value: unknown, fileName: string): void { this.downloadText(JSON.stringify(value, null, 2), fileName); }
+  private downloadText(text: string, fileName: string): void {
+    const file = new Blob([text], { type: 'application/json' });
     const link = document.createElement('a'); link.href = URL.createObjectURL(file); link.download = fileName; link.click(); URL.revokeObjectURL(link.href);
   }
   private isWorkoutList(value: unknown): value is Workout[] {
@@ -572,5 +640,7 @@ export class AppComponent implements OnInit, OnDestroy {
     return '↑';
   }
   workoutSymbol(color: string): string { return color === 'peach' ? '◌' : color === 'lavender' ? '✳' : color === 'blue' ? '↗' : '⌁'; }
-  private toast(message: string): void { this.notice = message; if (this.noticeTimeout) window.clearTimeout(this.noticeTimeout); this.noticeTimeout = window.setTimeout(() => this.notice = '', 3000); }
+  private toast(message: string): void {
+    this.zone.run(() => { this.notice = message; if (this.noticeTimeout) window.clearTimeout(this.noticeTimeout); this.noticeTimeout = window.setTimeout(() => this.notice = '', 3000); });
+  }
 }
