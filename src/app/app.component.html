@@ -26,7 +26,7 @@
         <div class="session-layout">
           <article class="exercise-focus">
             @if (activeExercise?.video) {<div class="exercise-art large-art video-art" [attr.data-color]="workout.color"><video [src]="videoUrl(activeExercise?.video)" autoplay loop muted playsinline [attr.aria-label]="t('session.demo', { name: activeExercise?.name ?? '' })"></video><span class="art-label">{{ activeExercise?.name }}</span></div>} @else {<div class="exercise-art large-art" [attr.data-color]="workout.color"><div class="art-sun"></div><div class="art-floor"></div><svg viewBox="0 0 250 230" role="img" [attr.aria-label]="t('session.illustration', { name: activeExercise?.name ?? '' })"><circle cx="125" cy="42" r="20" class="person-head"/><path d="M125 66 L125 132 M125 82 L83 106 M125 82 L168 105 M125 132 L93 190 M125 132 L159 190" class="person-body"/><path d="M76 108 L63 101 M169 106 L184 98 M90 193 L76 193 M160 193 L176 193" class="person-limb"/></svg><span class="art-label">{{ activeExercise?.name }}</span></div>}
-            <div class="exercise-info"><div class="phase-label">{{ phaseLabel(activeExercise?.phase ?? '') }} <span>·</span> {{ exerciseIndex + 1 }} {{ t('session.of') }} {{ runExercises.length }}</div><h2>{{ activeExercise?.name }}</h2><p>{{ activeExercise?.tip }}</p></div>
+            <div class="exercise-info"><div class="phase-label">{{ phaseLabel(activeExercise?.phase ?? '') }} <span>·</span> {{ exerciseIndex + 1 }} {{ t('session.of') }} {{ runExercises.length }}</div><h2>{{ activeExercise?.name }}</h2>@if (['legs', 'upper', 'lower'].includes(workout.cardioType ?? '')) {<label class="exercise-weight">{{ t('session.weight') }} ({{ weightUnit }})<input type="number" min="0" step="0.5" [ngModel]="weightForDisplay(activeExercise?.weightKg)" (ngModelChange)="updateExerciseWeightDisplay(+$event || null)"></label>}@if (tracksDistance(activeExercise)) {<label class="exercise-weight">{{ t('session.distance') }} ({{ distanceUnit }})<input type="number" min="0" step="0.1" [ngModel]="distanceForDisplay(activeExercise?.distanceKm)" (ngModelChange)="updateExerciseDistanceDisplay(+$event || null)"></label>}<p>{{ activeExercise?.tip }}</p></div>
             <div class="exercise-progress"><div class="progress-track"><span [style.width.%]="progress"></span></div><span>{{ progress }}%</span></div>
             <div class="session-controls"><button class="skip-control" [disabled]="exerciseIndex === 0" (click)="previousExercise()">{{ t('session.previous') }}</button><button class="play-control" (click)="toggleRun()"><span>{{ running ? 'Ⅱ' : '▶' }}</span>{{ running ? t('session.pause') : t('session.start') }}</button><button class="skip-control" (click)="skipExercise()">{{ exerciseIndex === runExercises.length - 1 ? t('session.finish') : t('session.next') }} →</button></div>
           </article>
@@ -56,6 +56,7 @@
         <div class="config-card-heading"><div><h2>{{ t('config.langTitle') }}</h2><p>{{ t('config.langText') }}</p></div>
           <div class="lang-switch lang-switch-large" role="group" [attr.aria-label]="t('lang.label')">@for (option of langs; track option.code) {<button [class.selected]="lang === option.code" (click)="setLang(option.code)" [attr.aria-pressed]="lang === option.code">{{ option.label }}</button>}</div>
         </div>
+        <label class="settings-repetitions">{{ t('config.repetitions') }}<select [ngModel]="settings.repetitions" (ngModelChange)="setRepetitions(+$event)">@for (count of [1, 2, 3]; track count) {<option [ngValue]="count">{{ count }}</option>}</select></label>
       </section>
       <section class="config-card">
         <div class="config-card-heading"><div><h2>{{ t('config.sessionsTitle') }}</h2><p>{{ t('config.sessionsText') }}</p></div><button class="text-link danger-link" (click)="resetWorkouts()">{{ t('config.reset') }}</button></div>
@@ -172,7 +173,7 @@
         </div>
         <p class="data-meta">{{ t('history.fileHint') }}</p>
       </section>
-      @if (logs.length) {<div class="history-list">@for (log of recentLogs; track log.startedAt) {<article class="history-card"><span class="history-check">✓</span><div class="history-main"><h3>{{ log.workoutName }}</h3><p>{{ date(log.startedAt) }} · {{ time(log.startedAt) }} – {{ time(log.endedAt) }}</p></div><div class="history-exercises">{{ t('history.intervals', { count: log.exercises.length }) }}</div><span class="history-duration">{{ clock(sessionSeconds(log)) }}</span></article>}</div><button class="text-link danger-link history-clear" (click)="clearHistory()">{{ t('history.clear') }}</button>} @else {<div class="empty-state history-empty"><span>◷</span><h3>{{ t('history.emptyTitle') }}</h3><p>{{ t('history.emptyText') }}</p><button class="primary-button" (click)="setView('workouts')">{{ t('history.seeWorkouts') }}</button></div>}
+      @if (logs.length) {<div class="history-list">@for (log of recentLogs; track log.startedAt) {<article class="history-card"><span class="history-check">✓</span><div class="history-main"><h3>{{ log.workoutName }}</h3><p>{{ date(log.startedAt) }} · {{ time(log.startedAt) }} – {{ time(log.endedAt) }}</p>@if (historyDistance(log); as km) {<small>{{ t('session.distance') }}: {{ distanceForDisplay(km) }} {{ distanceUnit }}</small>}@if (hasExerciseMetrics(log)) {<details class="history-activity-details"><summary>{{ t('history.activityDetails') }}</summary>@for (exercise of log.exercises; track $index) {@if (exercise.weightKg || exercise.distanceKm) {<small>{{ exercise.name }} &middot; @if (exercise.weightKg) {{{ weightForDisplay(exercise.weightKg) }} {{ weightUnit }}} @if (exercise.distanceKm) {{{ distanceForDisplay(exercise.distanceKm) }} {{ distanceUnit }}}</small>}}</details>}</div><div class="history-exercises">{{ t('history.intervals', { count: log.exercises.length }) }}</div><span class="history-duration">{{ clock(sessionSeconds(log)) }}</span></article>}</div><button class="text-link danger-link history-clear" (click)="clearHistory()">{{ t('history.clear') }}</button>} @else {<div class="empty-state history-empty"><span>◷</span><h3>{{ t('history.emptyTitle') }}</h3><p>{{ t('history.emptyText') }}</p><button class="primary-button" (click)="setView('workouts')">{{ t('history.seeWorkouts') }}</button></div>}
     }
     <nav class="mobile-tabs" [attr.aria-label]="t('nav.mobile')">
       <button [class.selected]="view === 'home' && !activeWorkout" (click)="setView('home')"><span>⌂</span>{{ t('nav.home') }}</button>
@@ -203,7 +204,23 @@
         <label>{{ t('profileModal.age') }}<input type="number" min="1" max="120" [(ngModel)]="profile.age" [placeholder]="t('profileModal.agePh')"></label>
         <label>{{ t('profileModal.objective') }}<select [(ngModel)]="profile.objective">@for (objective of objectives; track objective) {<option [value]="objective">{{ objectiveLabel(objective) }}</option>}</select></label>
       </div>
-      <label>{{ t('profileModal.weight') }} <span class="optional-label">{{ t('profileModal.optional') }}</span><div class="input-suffix"><input type="number" min="0" step="0.5" [(ngModel)]="profile.weightLoss" placeholder="0"><span>kg</span></div></label>
+      <label>{{ t('profileModal.units') }}<select [ngModel]="unitSystem" (ngModelChange)="setUnitSystem($event)"><option value="metric">{{ t('profileModal.metric') }}</option><option value="imperial">{{ t('profileModal.imperial') }}</option></select></label>
+      <label>{{ t('profileModal.weight') }} <span class="optional-label">{{ t('profileModal.optional') }}</span><div class="input-suffix"><input type="number" min="0" step="0.5" [ngModel]="weightForDisplay(profile.weightLoss)" (ngModelChange)="profile.weightLoss = weightToKg(+$event || null)" placeholder="0"><span>{{ weightUnit }}</span></div></label>
+      <section class="weight-tracker">
+        <div class="weight-tracker-heading"><div><h3>{{ t('profileModal.weightHistory') }}</h3><p>{{ t('profileModal.weightHistoryHint') }}</p></div><button class="add-exercise" (click)="addWeightEntry()">{{ t('profileModal.addWeight') }}</button></div>
+        @if (weightProgress; as progress) {
+          <div class="weight-goal-progress">
+            <div class="weight-goal-label"><strong>{{ t('profileModal.weightProgress') }}</strong><span>{{ weightForDisplay(progress.lost) | number:'1.0-1' }} / {{ weightForDisplay(profile.weightLoss) }} {{ weightUnit }}</span></div>
+            <div class="progress-track"><span [style.width.%]="progress.percent"></span></div>
+            <small>{{ t('profileModal.weightRemaining', { amount: weightForDisplay(progress.remaining) ?? 0, unit: weightUnit }) }}</small>
+          </div>
+        }
+        <div class="weight-entry-list">
+          @for (entry of weightEntries; track $index; let i = $index) {
+            <div class="weight-entry-row"><label>{{ t('profileModal.weightDate') }}<input type="date" [(ngModel)]="entry.date" [name]="'weight-date-' + i"></label><label>{{ t('profileModal.weightValue') }}<div class="input-suffix"><input type="number" min="1" step="0.1" [ngModel]="weightForDisplay(entry.weight)" (ngModelChange)="entry.weight = weightToKg(+$event || null)" [name]="'weight-value-' + i"><span>{{ weightUnit }}</span></div></label><button class="remove-exercise" (click)="removeWeightEntry(i)" [attr.aria-label]="t('profileModal.removeWeight')">×</button></div>
+          } @empty {<p class="weight-empty">{{ t('profileModal.noWeights') }}</p>}
+        </div>
+      </section>
       <label>{{ t('lang.label') }}<select [ngModel]="lang" (ngModelChange)="setLang($event)">@for (option of langs; track option.code) {<option [value]="option.code">{{ option.label }}</option>}</select></label>
       <button class="primary-button full-button" (click)="saveProfile()">{{ t('profileModal.save') }} <span>→</span></button>
     </section>
@@ -227,6 +244,7 @@
         <label>{{ t('editor.level') }}<select [(ngModel)]="draft.level">@for (level of levels; track level) {<option [value]="level">{{ levelLabel(level) }}</option>}</select></label>
         <label>{{ t('editor.color') }}<select [(ngModel)]="draft.color">@for (color of colors; track color) {<option [value]="color">{{ colorLabel(color) }}</option>}</select></label>
       </div>
+      <label>{{ t('editor.workoutType') }}<select [ngModel]="draft.cardioType ?? 'general'" (ngModelChange)="draft.cardioType = $event">@for (value of aiOptions.focus; track value) {<option [value]="value">{{ aiOptionLabel('focus', value) }}</option>}</select></label>
       <div class="exercise-editor-heading">
         <div><h3>{{ t('editor.exercises') }}</h3><p>{{ t('editor.exercisesText') }}</p></div>
         <button class="add-exercise" (click)="addExercise()">{{ t('editor.add') }}</button>
@@ -281,6 +299,7 @@
           <label>{{ t('ai.intensity') }}<select [(ngModel)]="aiRequest.intensity">@for (value of aiOptions.intensity; track value) {<option [value]="value">{{ aiOptionLabel('intensity', value) }}</option>}</select></label>
           <label>{{ t('ai.focus') }}<select [(ngModel)]="aiRequest.focus">@for (value of aiOptions.focus; track value) {<option [value]="value">{{ aiOptionLabel('focus', value) }}</option>}</select></label>
         </div>
+        <label>{{ t('editor.color') }}<select [(ngModel)]="aiRequest.color">@for (color of colors; track color) {<option [value]="color">{{ colorLabel(color) }}</option>}</select></label>
         <div class="form-row">
           <label>{{ t('ai.impact') }}<select [(ngModel)]="aiRequest.impact">@for (value of aiOptions.impact; track value) {<option [value]="value">{{ aiOptionLabel('impact', value) }}</option>}</select></label>
           <label>{{ t('ai.equipment') }}<select [(ngModel)]="aiRequest.equipment">@for (value of aiOptions.equipment; track value) {<option [value]="value">{{ aiOptionLabel('equipment', value) }}</option>}</select></label>

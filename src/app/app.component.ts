@@ -6,19 +6,20 @@ import seedWorkoutsEn from './workouts.en.json';
 import { I18N, I18nKey, Lang, LANGS } from './i18n';
 import { DriveFile, GOOGLE_CLIENT_ID, GoogleDrive } from './google-drive';
 
-interface Exercise { id: string; name: string; phase: string; seconds: number; rounds?: number; tip: string; video?: string; }
-interface Workout { id: string; name: string; subtitle: string; duration: number; level: string; color: string; optional?: boolean; exercises: Exercise[]; }
-interface Profile { name: string; age: number | null; objective: 'Remise en forme' | 'Force'; weightLoss: number | null; }
-interface ExerciseLog { name: string; startedAt: string; endedAt: string; }
+interface Exercise { id: string; name: string; phase: string; seconds: number; rounds?: number; weightKg?: number; distanceKm?: number; tip: string; video?: string; }
+interface Workout { id: string; name: string; subtitle: string; duration: number; level: string; color: string; cardioType?: string; optional?: boolean; exercises: Exercise[]; }
+interface WeightEntry { date: string; weight: number | null; }
+interface Profile { name: string; age: number | null; objective: 'Remise en forme' | 'Force'; weightLoss: number | null; weightHistory?: WeightEntry[]; units?: 'metric' | 'imperial'; }
+interface ExerciseLog { name: string; startedAt: string; endedAt: string; weightKg?: number; distanceKm?: number; }
 interface SessionLog { workoutName: string; startedAt: string; endedAt: string; exercises: ExerciseLog[]; }
 interface RunExercise { exercise: Exercise; round: number; }
-interface Settings { lang: Lang; autoSave: boolean; googleClientId?: string; }
+interface Settings { lang: Lang; autoSave: boolean; repetitions: 1 | 2 | 3; googleClientId?: string; }
 type SaveFilePicker = (options: { suggestedName: string; types: { description: string; accept: Record<string, string[]> }[] }) => Promise<{ createWritable(): Promise<{ write(data: Blob): Promise<void>; close(): Promise<void> }> }>;
 interface AppData { workouts: Workout[]; logs: SessionLog[]; profile: Profile; }
 interface Backup extends AppData { id: string; createdAt: string; }
 interface ActiveSessionState { workout: Workout; exerciseIndex: number; remaining: number; sessionStartedAt: string; exerciseLogs: ExerciseLog[]; }
 type View = 'home' | 'workouts' | 'history' | 'config';
-interface AiRequest { duration: number; level: string; intensity: string; focus: string; impact: string; equipment: string; space: string; notes: string; }
+interface AiRequest { duration: number; level: string; intensity: string; focus: string; color: string; impact: string; equipment: string; space: string; notes: string; }
 
 // Phases, levels and objectives are stored with their canonical (French) values and translated for display.
 const PHASES = ['Échauffement', 'Bloc principal', 'Retour au calme'];
@@ -52,10 +53,10 @@ export class AppComponent implements OnInit, OnDestroy {
   readonly colors = COLORS;
   readonly objectives = Object.keys(OBJECTIVE_KEYS);
   readonly aiOptions = {
-    intensity: ['gentle', 'moderate', 'sustained', 'hiit'], focus: ['general', 'burn', 'endurance', 'strength', 'dance', 'walk'],
+    intensity: ['gentle', 'moderate', 'sustained', 'hiit'], focus: ['general', 'burn', 'endurance', 'strength', 'dance', 'walk', 'legs', 'upper', 'lower', 'jogging', 'bicycling', 'bowling'],
     impact: ['low', 'medium', 'jumps'], equipment: ['none', 'chair', 'step', 'wall', 'all'], space: ['small', 'medium', 'large']
   };
-  settings: Settings = { lang: 'fr', autoSave: true };
+  settings: Settings = { lang: 'fr', autoSave: true, repetitions: 3 };
   workouts: Workout[] = [];
   profile: Profile = { name: 'Alex', age: null, objective: 'Remise en forme', weightLoss: null };
   logs: SessionLog[] = [];
@@ -101,11 +102,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     const stored = this.load<Partial<Settings>>(KEYS.settings, {});
-    this.settings = { lang: stored.lang === 'en' ? 'en' : 'fr', autoSave: stored.autoSave !== false, googleClientId: typeof stored.googleClientId === 'string' ? stored.googleClientId : '' };
+    this.settings = { lang: stored.lang === 'en' ? 'en' : 'fr', autoSave: stored.autoSave !== false, repetitions: ([1, 2, 3].includes(Number(stored.repetitions)) ? Number(stored.repetitions) : 3) as 1 | 2 | 3, googleClientId: typeof stored.googleClientId === 'string' ? stored.googleClientId : '' };
     this.clientIdDraft = this.settings.googleClientId ?? '';
     try { this.canShareFiles = !!navigator.canShare?.({ files: [new File(['{}'], 'test.json', { type: 'application/json' })] }); } catch { this.canShareFiles = false; }
     this.workouts = this.load(KEYS.workouts, SEEDS[this.lang]);
     this.profile = this.load(KEYS.profile, this.profile);
+    this.profile.weightHistory = Array.isArray(this.profile.weightHistory) ? this.profile.weightHistory.filter(entry => entry && typeof entry.date === 'string' && Number.isFinite(Date.parse(entry.date)) && typeof entry.weight === 'number' && Number.isFinite(entry.weight) && entry.weight > 0) : [];
+    this.profile.units = this.profile.units === 'imperial' ? 'imperial' : 'metric';
     this.logs = this.load(KEYS.logs, []);
     this.backups = this.load(KEYS.backups, []);
     if (this.attachMissingVideos()) this.save(KEYS.workouts, this.workouts);
@@ -165,6 +168,8 @@ export class AppComponent implements OnInit, OnDestroy {
     this.writeKey(KEYS.settings, this.settings);
     if (enabled) { this.saveNow(); this.toast(this.t('toast.autoOn')); } else this.toast(this.t('toast.autoOff'));
   }
+  setRepetitions(value: number): void { this.settings = { ...this.settings, repetitions: ([1, 2, 3].includes(value) ? value : 3) as 1 | 2 | 3 }; this.writeKey(KEYS.settings, this.settings); if (this.aiPrompt) this.buildAiPrompt(); }
+  updateExerciseWeight(value: number | null): void { if (!this.activeExercise) return; this.activeExercise.weightKg = value && value > 0 ? value : undefined; this.persistActiveSession(); }
   get storageUsed(): string {
     let chars = 0;
     for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key?.startsWith('mouvement.')) chars += key.length + (localStorage.getItem(key)?.length ?? 0); }
@@ -277,7 +282,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!window.confirm(this.t('confirm.clear'))) return;
     this.stopClock(); this.activeWorkout = null; this.running = false;
     Object.values(KEYS).filter(key => key !== KEYS.settings).forEach(key => localStorage.removeItem(key));
-    this.workouts = structuredClone(SEEDS[this.lang]); this.logs = []; this.backups = []; this.profile = { name: 'Alex', age: null, objective: 'Remise en forme', weightLoss: null };
+    this.workouts = structuredClone(SEEDS[this.lang]); this.logs = []; this.backups = []; this.profile = { name: 'Alex', age: null, objective: 'Remise en forme', weightLoss: null, weightHistory: [] };
     this.dirty = false; this.persistAll(); this.toast(this.t('toast.cleared'));
   }
   clearHistory(): void {
@@ -371,7 +376,7 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!window.confirm(this.t('confirm.reset'))) return;
     this.workouts = structuredClone(SEEDS[this.lang]); this.save(KEYS.workouts, this.workouts); this.toast(this.t('toast.restored'));
   }
-  private blankWorkout(): Workout { return { id: '', name: '', subtitle: '', duration: 20, level: LEVELS[0], color: 'mint', exercises: [{ id: crypto.randomUUID(), name: '', phase: PHASES[1], seconds: 45, tip: '' }] }; }
+  private blankWorkout(): Workout { return { id: '', name: '', subtitle: '', duration: 20, level: LEVELS[0], color: 'mint', cardioType: 'general', exercises: [{ id: crypto.randomUUID(), name: '', phase: PHASES[1], seconds: 45, tip: '' }] }; }
   openNewWorkout(): void { this.editingId = null; this.draft = this.blankWorkout(); this.modal = 'workout'; }
   openEditWorkout(workout: Workout): void { this.editingId = workout.id; this.draft = structuredClone(workout); this.modal = 'workout'; }
   addExercise(): void { this.draft.exercises.push({ id: crypto.randomUUID(), name: '', phase: PHASES[1], seconds: 45, tip: '' }); }
@@ -381,6 +386,7 @@ export class AppComponent implements OnInit, OnDestroy {
     clean.name = clean.name.trim();
     if (!clean.name || clean.exercises.some(exercise => !exercise.name.trim())) { this.toast(this.t('toast.needNames')); return; }
     clean.id = this.editingId ?? crypto.randomUUID();
+    clean.cardioType = this.aiOptions.focus.includes(clean.cardioType ?? '') ? clean.cardioType : 'general';
     clean.exercises = clean.exercises.map(exercise => ({ ...exercise, id: exercise.id || crypto.randomUUID(), name: exercise.name.trim(), seconds: Math.max(10, Number(exercise.seconds) || 45), tip: exercise.tip.trim(), video: exercise.video?.trim() || undefined }));
     if (this.editingId) this.workouts = this.workouts.map(workout => workout.id === this.editingId ? clean : workout);
     else this.workouts = [...this.workouts, clean];
@@ -415,28 +421,29 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   // ---------- ChatGPT assistant ----------
-  private blankAiRequest(): AiRequest { return { duration: 20, level: LEVELS[0], intensity: 'gentle', focus: 'general', impact: 'low', equipment: 'none', space: 'small', notes: '' }; }
+  private blankAiRequest(): AiRequest { return { duration: 20, level: LEVELS[0], intensity: 'gentle', focus: 'general', color: 'mint', impact: 'low', equipment: 'none', space: 'small', notes: '' }; }
   openAiAssistant(): void { this.aiPrompt = ''; this.aiResponse = ''; this.aiError = ''; this.aiPreview = null; this.aiCopied = false; this.modal = 'ai'; }
   buildAiPrompt(): void {
     const r = this.aiRequest; const p = this.profile;
     const library = this.videoLibrary.length ? this.videoLibrary : [...new Set([...this.videoDescriptions.keys()])];
     const descriptions = this.videoDescriptions;
-    const example = { name: this.t('prompt.exName'), subtitle: this.t('prompt.exSubtitle'), duration: r.duration, level: this.levelLabel(r.level), color: 'mint', exercises: [
+    const strengthFocus = ['legs', 'upper', 'lower'].includes(r.focus);
+    const example = { name: this.t('prompt.exName'), subtitle: this.t('prompt.exSubtitle'), duration: r.duration, level: this.levelLabel(r.level), color: r.color, exercises: [
       { name: descriptions.get('marche-active.mp4') ?? 'Marche active', phase: this.phaseLabel(PHASES[0]), seconds: 60, tip: this.t('prompt.exTip'), video: 'marche-active.mp4' },
-      { name: descriptions.get('jumping-jacks-doux.mp4') ?? 'Jumping jacks', phase: this.phaseLabel(PHASES[1]), seconds: 45, rounds: 3, tip: this.t('prompt.exTip'), video: 'jumping-jacks-doux.mp4' },
+      { name: descriptions.get('jumping-jacks-doux.mp4') ?? 'Jumping jacks', phase: this.phaseLabel(PHASES[1]), seconds: 45, rounds: this.settings.repetitions, ...(strengthFocus ? { weight: this.unitSystem === 'imperial' ? 11 : 5, weightUnit: this.weightUnit } : {}), tip: this.t('prompt.exTip'), video: 'jumping-jacks-doux.mp4' },
       { name: descriptions.get('etirement-quadriceps.mp4') ?? 'Quad stretch', phase: this.phaseLabel(PHASES[2]), seconds: 60, tip: this.t('prompt.exTip'), video: 'etirement-quadriceps.mp4' }] };
     this.aiPrompt = [
       this.t('prompt.intro'),
       '', this.t('prompt.profile'),
-      ...(p.age ? [this.t('prompt.age', { age: p.age })] : []), this.t('prompt.objective', { objective: this.objectiveLabel(p.objective) }), ...(p.weightLoss ? [this.t('prompt.weight', { kg: p.weightLoss })] : []),
+      ...(p.age ? [this.t('prompt.age', { age: p.age })] : []), this.t('prompt.objective', { objective: this.objectiveLabel(p.objective) }), ...(p.weightLoss ? [this.t('prompt.weight', { weight: this.weightForDisplay(p.weightLoss) ?? 0, unit: this.weightUnit })] : []),
       '', this.t('prompt.prefs'),
       this.t('prompt.duration', { value: r.duration }), this.t('prompt.level', { value: this.levelLabel(r.level) }),
       this.t('prompt.intensity', { value: this.aiOptionLabel('intensity', r.intensity) }), this.t('prompt.focus', { value: this.aiOptionLabel('focus', r.focus) }),
       this.t('prompt.impact', { value: this.aiOptionLabel('impact', r.impact) }), this.t('prompt.equipment', { value: this.aiOptionLabel('equipment', r.equipment) }),
-      this.t('prompt.space', { value: this.aiOptionLabel('space', r.space) }),
+      this.t('prompt.space', { value: this.aiOptionLabel('space', r.space) }), this.t('prompt.color', { value: this.colorLabel(r.color) }),
       ...(r.notes.trim() ? [this.t('prompt.notes', { value: r.notes.trim() })] : []),
       '', this.t('prompt.rules'),
-      this.t('prompt.rulePhases'), this.t('prompt.ruleRounds'), this.t('prompt.ruleTotal', { value: r.duration }), this.t('prompt.ruleSeconds'), this.t('prompt.ruleTip'), this.t('prompt.ruleLevel'), this.t('prompt.ruleVideo'),
+      this.t('prompt.rulePhases'), ...(this.isOutdoorCardioFocus(r.focus) ? [this.t('prompt.ruleCardioPhases')] : []), this.t('prompt.ruleRoundsCount', { count: this.settings.repetitions }), this.t('prompt.ruleTotal', { value: r.duration }), this.t('prompt.ruleSeconds'), ...(strengthFocus ? [this.t('prompt.ruleWeight', { unit: this.weightUnit })] : []), this.t('prompt.ruleTip'), this.t('prompt.ruleLevel'), this.t('prompt.ruleVideo'),
       '', this.t('prompt.videoList'),
       ...library.map(file => `- ${file}${descriptions.has(file) ? ' → ' + descriptions.get(file) : ''}`),
       '', this.t('prompt.answer'), this.t('prompt.answerRules'),
@@ -444,6 +451,7 @@ export class AppComponent implements OnInit, OnDestroy {
     ].join('\n');
     this.aiCopied = false;
   }
+  private isOutdoorCardioFocus(focus: string): boolean { return ['walk', 'jogging', 'bicycling'].includes(focus); }
   async copyAiPrompt(): Promise<void> {
     if (!this.aiPrompt) this.buildAiPrompt();
     this.aiCopied = true;
@@ -519,23 +527,48 @@ export class AppComponent implements OnInit, OnDestroy {
       if (!name) continue;
       const phase = this.canonicalPhase(item['phase']);
       const seconds = Math.min(600, Math.max(10, Math.round(Number(item['seconds']) || 45)));
-      const rounds = phase === PHASES[1] ? Math.min(10, Math.max(1, Math.round(Number(item['rounds']) || 1))) : undefined;
+      const rounds = phase === PHASES[1] ? this.settings.repetitions : undefined;
+      const requestedWeight = typeof item['weight'] === 'number' && Number.isFinite(item['weight']) ? this.weightToKg(item['weight']) : Number(item['weightKg']);
+      const weightKg = ['legs', 'upper', 'lower'].includes(this.aiRequest.focus) && phase === PHASES[1] && typeof requestedWeight === 'number' && Number.isFinite(requestedWeight) && requestedWeight > 0 ? Math.min(1000, requestedWeight) : undefined;
       const { video, guessed } = this.resolveVideo(name, phase, item['video']);
       const id = crypto.randomUUID();
       if (guessed) this.aiGuessedVideos.add(id);
-      exercises.push({ id, name, phase, seconds, ...(rounds ? { rounds } : {}), tip: typeof item['tip'] === 'string' ? item['tip'].trim() : '', ...(video ? { video } : {}) });
+      exercises.push({ id, name, phase, seconds, ...(rounds ? { rounds } : {}), ...(weightKg ? { weightKg } : {}), tip: typeof item['tip'] === 'string' ? item['tip'].trim() : '', ...(video ? { video } : {}) });
     }
     if (!exercises.length) { this.aiError = this.t('error.noExercises'); return; }
     const mainRounds = Math.max(1, ...exercises.filter(e => e.phase === PHASES[1]).map(e => e.rounds ?? 1));
     exercises.forEach(e => { if (e.phase === PHASES[1]) e.rounds = mainRounds; });
+    this.fitExercisesToDuration(exercises, this.aiRequest.duration);
     this.aiPreview = {
       id: '', name: typeof raw['name'] === 'string' && raw['name'].trim() ? raw['name'].trim() : this.t('ai.defaultName'),
       subtitle: typeof raw['subtitle'] === 'string' ? raw['subtitle'].trim() : this.t('ai.defaultSubtitle'),
-      duration: Math.max(1, Math.round(Number(raw['duration']) || this.aiRequest.duration)),
+      duration: this.aiRequest.duration,
       level: this.canonicalLevel(raw['level']) ?? this.aiRequest.level,
-      color: COLORS.includes(String(raw['color'])) ? String(raw['color']) : COLORS[this.workouts.length % COLORS.length],
+      color: COLORS.includes(this.aiRequest.color) ? this.aiRequest.color : (COLORS.includes(String(raw['color'])) ? String(raw['color']) : COLORS[this.workouts.length % COLORS.length]),
+      cardioType: this.aiRequest.focus,
       exercises
     };
+  }
+  private fitExercisesToDuration(exercises: Exercise[], targetMinutes: number): void {
+    const weightedSeconds = () => exercises.reduce((sum, exercise) => sum + exercise.seconds * (exercise.phase === PHASES[1] ? exercise.rounds ?? 1 : 1), 0);
+    const targetSeconds = Math.max(60, Math.round(targetMinutes * 60));
+    const originalSeconds = weightedSeconds();
+    if (!originalSeconds) return;
+    const factor = targetSeconds / originalSeconds;
+    exercises.forEach(exercise => { exercise.seconds = Math.min(600, Math.max(10, Math.round(exercise.seconds * factor))); });
+
+    // Correct rounding and per-interval limits so the planned timer total matches the requested estimate.
+    let difference = targetSeconds - weightedSeconds();
+    while (difference !== 0) {
+      const exercise = exercises.find(item => difference > 0 ? item.seconds < 600 : item.seconds > 10);
+      if (!exercise) break;
+      const weight = exercise.phase === PHASES[1] ? exercise.rounds ?? 1 : 1;
+      const step = difference > 0 ? Math.min(weight, difference) : -Math.min(weight, -difference);
+      const next = exercise.seconds + step / weight;
+      if (!Number.isInteger(next) || next < 10 || next > 600) break;
+      exercise.seconds = next;
+      difference -= step;
+    }
   }
   estimatedMinutes(workout: Workout): number {
     const rounds = Math.max(1, ...workout.exercises.filter(e => e.phase === PHASES[1]).map(e => e.rounds ?? 1));
@@ -560,7 +593,38 @@ export class AppComponent implements OnInit, OnDestroy {
   get todayLabel(): string { return new Intl.DateTimeFormat(this.locale, { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date()); }
   setView(view: View): void { this.view = view; this.previewVideo = null; }
   openProfile(): void { this.modal = 'profile'; }
-  saveProfile(): void { this.save(KEYS.profile, this.profile); this.modal = null; this.toast(this.t('toast.profile')); }
+  get weightEntries(): WeightEntry[] { return this.profile.weightHistory ??= []; }
+  get unitSystem(): 'metric' | 'imperial' { return this.profile.units === 'imperial' ? 'imperial' : 'metric'; }
+  get weightUnit(): string { return this.unitSystem === 'imperial' ? 'lb' : 'kg'; }
+  get distanceUnit(): string { return this.unitSystem === 'imperial' ? 'mi' : 'km'; }
+  weightForDisplay(kg: number | null | undefined): number | null { return kg == null || !Number.isFinite(kg) ? null : Number((this.unitSystem === 'imperial' ? kg * 2.2046226218 : kg).toFixed(1)); }
+  weightToKg(value: number | null): number | null { return value == null || !Number.isFinite(value) ? null : Number((this.unitSystem === 'imperial' ? value / 2.2046226218 : value).toFixed(3)); }
+  distanceForDisplay(km: number | null | undefined): number | null { return km == null || !Number.isFinite(km) ? null : Number((this.unitSystem === 'imperial' ? km * 0.6213711922 : km).toFixed(2)); }
+  distanceToKm(value: number | null): number | null { return value == null || !Number.isFinite(value) ? null : Number((this.unitSystem === 'imperial' ? value / 0.6213711922 : value).toFixed(4)); }
+  setUnitSystem(value: string): void { this.profile.units = value === 'imperial' ? 'imperial' : 'metric'; }
+  updateExerciseWeightDisplay(value: number | null): void { this.updateExerciseWeight(this.weightToKg(value)); }
+  updateExerciseDistanceDisplay(value: number | null): void { if (!this.activeExercise) return; const km = this.distanceToKm(value); this.activeExercise.distanceKm = km && km > 0 ? km : undefined; this.persistActiveSession(); }
+  tracksDistance(exercise: Exercise | null): boolean {
+    if (!exercise) return false;
+    const type = this.activeWorkout?.cardioType ?? '';
+    if (['jogging', 'jog', 'running', 'run', 'bicycling', 'bicycle', 'bike', 'cycling', 'cycle', 'walk', 'walking'].includes(type)) return true;
+    return /\b(walk|walking|marche|jog|jogging|run|running|bicycl|bicycle|cycling|cycle|velo)\b/i.test(this.normalizeName(exercise.name));
+  }
+  historyDistance(log: SessionLog): number | null { const values = log.exercises.map(exercise => exercise.distanceKm ?? 0); const total = values.reduce((sum, value) => sum + value, 0); return total > 0 ? total : null; }
+  hasExerciseMetrics(log: SessionLog): boolean { return log.exercises.some(exercise => !!exercise.weightKg || !!exercise.distanceKm); }
+  addWeightEntry(): void { this.weightEntries.push({ date: this.localDateInputValue(), weight: null }); }
+  removeWeightEntry(index: number): void { this.weightEntries.splice(index, 1); }
+  private localDateInputValue(): string { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`; }
+  get weightProgress(): { start: number; current: number; lost: number; remaining: number; percent: number } | null {
+    const entries = this.weightEntries.filter((entry): entry is WeightEntry & { weight: number } => !!entry.date && typeof entry.weight === 'number' && Number.isFinite(entry.weight) && entry.weight > 0).slice().sort((a, b) => a.date.localeCompare(b.date));
+    if (!entries.length || !this.profile.weightLoss || this.profile.weightLoss <= 0) return null;
+    const start = entries[0].weight; const current = entries[entries.length - 1].weight; const lost = start - current;
+    return { start, current, lost, remaining: Math.max(0, this.profile.weightLoss - lost), percent: Math.min(100, Math.max(0, lost / this.profile.weightLoss * 100)) };
+  }
+  saveProfile(): void {
+    this.profile.weightHistory = this.weightEntries.filter(entry => !!entry.date && typeof entry.weight === 'number' && Number.isFinite(entry.weight) && entry.weight > 0).map(entry => ({ ...entry, weight: Number(entry.weight) }));
+    this.save(KEYS.profile, this.profile); this.modal = null; this.toast(this.t('toast.profile'));
+  }
   exportProfile(): void {
     this.download({ app: 'mouvement', version: 1, profile: this.profile }, 'mouvement-profile.json');
     this.toast(this.t('toast.exported'));
@@ -585,7 +649,7 @@ export class AppComponent implements OnInit, OnDestroy {
         if (section === 'profile') {
           if (!this.isProfile(data)) throw new Error('invalid');
           if (!window.confirm(this.t('profileModal.confirmImport'))) return;
-          this.profile = { name: data.name, age: data.age, objective: data.objective, weightLoss: data.weightLoss };
+          this.profile = { name: data.name, age: data.age, objective: data.objective, weightLoss: data.weightLoss, weightHistory: data.weightHistory ?? [], units: data.units ?? 'metric' };
           this.save(KEYS.profile, this.profile);
           this.toast(this.t('profileModal.imported'));
         } else {
@@ -607,7 +671,9 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.isRecord(value) && typeof value['name'] === 'string'
       && (value['age'] === null || (typeof value['age'] === 'number' && Number.isFinite(value['age']) && value['age'] >= 1 && value['age'] <= 120))
       && (value['objective'] === 'Remise en forme' || value['objective'] === 'Force')
-      && (value['weightLoss'] === null || (typeof value['weightLoss'] === 'number' && Number.isFinite(value['weightLoss']) && value['weightLoss'] >= 0));
+      && (value['weightLoss'] === null || (typeof value['weightLoss'] === 'number' && Number.isFinite(value['weightLoss']) && value['weightLoss'] >= 0))
+      && (value['weightHistory'] === undefined || (Array.isArray(value['weightHistory']) && value['weightHistory'].every((entry: unknown) => this.isRecord(entry) && typeof entry['date'] === 'string' && Number.isFinite(Date.parse(entry['date'])) && typeof entry['weight'] === 'number' && Number.isFinite(entry['weight']) && entry['weight'] > 0)))
+      && (value['units'] === undefined || value['units'] === 'metric' || value['units'] === 'imperial');
   }
   private isLogInterval(value: unknown): boolean {
     return this.isRecord(value) && typeof value['startedAt'] === 'string' && typeof value['endedAt'] === 'string'
@@ -670,7 +736,8 @@ export class AppComponent implements OnInit, OnDestroy {
     if (!this.activeWorkout || !this.activeExercise) return;
     const continueRunning = this.running;
     this.stopClock(); this.running = false;
-    if (this.exerciseStartedAt) this.exerciseLogs.push({ name: this.activeExercise.name, startedAt: this.exerciseStartedAt, endedAt: new Date().toISOString() });
+    if (this.exerciseStartedAt) this.exerciseLogs.push({ name: this.activeExercise.name, startedAt: this.exerciseStartedAt, endedAt: new Date().toISOString(), ...(this.activeExercise.weightKg ? { weightKg: this.activeExercise.weightKg } : {}), ...(this.activeExercise.distanceKm ? { distanceKm: this.activeExercise.distanceKm } : {}) });
+    if (this.tracksDistance(this.activeExercise)) this.activeExercise.distanceKm = undefined;
     this.exerciseStartedAt = '';
     if (this.exerciseIndex + 1 < this.runExercises.length) {
       this.exerciseIndex++; this.currentRound = this.runExercises[this.exerciseIndex].round || 1; this.remaining = this.activeExercise?.seconds ?? 45;
